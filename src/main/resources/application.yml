@@ -1,0 +1,14 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: bnu_tiku_backend
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    password: ko2348218
+    username: root
+    url: jdbc:mysql://localhost:3306/question_bank
+
+mybatis-plus:
+  mapper-locations: classpath:mapper/*.xml

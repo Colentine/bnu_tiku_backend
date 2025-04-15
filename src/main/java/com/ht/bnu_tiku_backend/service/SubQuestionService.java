@@ -1,0 +1,13 @@
+package com.ht.bnu_tiku_backend.service;
+
+import com.ht.bnu_tiku_backend.model.domain.SubQuestion;
+import com.baomidou.mybatisplus.extension.service.IService;
+
+/**
+* @author huangtao
+* @description 针对表【sub_question(子问题表)】的数据库操作Service
+* @createDate 2025-04-14 22:19:42
+*/
+public interface SubQuestionService extends IService<SubQuestion> {
+
+}
