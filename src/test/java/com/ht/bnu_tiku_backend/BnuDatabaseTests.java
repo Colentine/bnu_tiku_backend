@@ -107,9 +107,10 @@ public class BnuDatabaseTests {
     @Test
     public void knowledgePointSelectOneTest(){
         QueryWrapper<KnowledgePoint> objectQueryWrapper = new QueryWrapper<>();
-        objectQueryWrapper.eq("name", "正负数的定义");
-        KnowledgePoint knowledgePoint = knowledgePointMapper.selectOne(objectQueryWrapper);
-        System.out.println(knowledgePoint);
+        objectQueryWrapper.eq("name","数与式").or().eq("name", "代数式").or().eq("name", "整式的乘除").or().eq("name", "多项式乘多项式").or().eq("name", "多项式乘多项式与图形面积");
+        knowledgePointMapper.selectList(objectQueryWrapper).forEach(knowledgePoint -> {
+            System.out.println(knowledgePoint.getName()+":"+knowledgePoint.getId());
+        });
     }
 
     @Test

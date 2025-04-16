@@ -54,6 +54,7 @@ create table if not exists question_bank.question
 (
     id                   bigint unsigned auto_increment
         primary key,
+    parent_id bigint unsigned UNIQUE,
     question_type        tinyint unsigned                      not null comment '题目类型：简单题（simple）或复合题（composite）',
     simple_question_type tinyint unsigned                      null comment '简单题的具体类型，选择、填空等',
     subject              varchar(50) default '数学'             null comment '学科，默认数学',
@@ -75,7 +76,7 @@ create table if not exists question_bank.question_answer_block
     question_id bigint unsigned                        not null comment '关联题目块表的ID，表示该答案所属的题目',
     content_type      tinyint unsigned                       not null comment '内容类型，可选值为文本、图片',
     image_file_id     bigint unsigned                        null comment '图片id',
-    interactive_index int unsigned                           not null comment '第几个作答交互，从1开始',
+    interactive_index bigint unsigned                           not null comment '第几个作答交互的答案，从1开始',
     answer_text       text                                   null comment '预期答案',
     position          int unsigned default '0'               null comment '内容在当前内容块的位置（从上往下）',
     created_at        datetime     default CURRENT_TIMESTAMP null comment '答案创建时间，默认为当前时间',
@@ -93,6 +94,7 @@ create table if not exists question_bank.question_explanation_block
     content_type      tinyint unsigned                       not null comment '内容类型，可选值为文本、图片',
     image_file_id     bigint unsigned                        null comment '图片id',
     explanation_text  text                                   null comment '分析、详解或点睛的文本',
+    interactive_index bigint unsigned                           not null comment '第几个作答交互的解析,从1开始',
     position          int unsigned default '0'               null comment '内容在当前内容块的位置（从上往下）',
     created_at        datetime     default CURRENT_TIMESTAMP null comment '答案创建时间，默认为当前时间',
     updated_at        datetime     default CURRENT_TIMESTAMP null on update CURRENT_TIMESTAMP comment '答案最后更新时间，自动更新为当前时间'
@@ -166,17 +168,6 @@ create table if not exists question_bank.source
     description text         null comment '来源描述'
 )
     comment '习题来源表';
-
-create table if not exists question_bank.sub_question
-(
-    id            bigint unsigned auto_increment
-        primary key,
-    question_id   bigint unsigned                    not null comment '所属复合题ID，关联 question 表',
-    question_type tinyint unsigned                   not null comment '题目类型',
-    created_at    datetime default CURRENT_TIMESTAMP null,
-    updated_at    datetime default CURRENT_TIMESTAMP null on update CURRENT_TIMESTAMP
-)
-    comment '子问题表';
 
 create table if not exists question_bank.user
 (
