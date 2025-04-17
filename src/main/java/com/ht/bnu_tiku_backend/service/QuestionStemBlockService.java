@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 /**
 * @author huangtao
 * @description 针对表【question_stem_block(题干表)】的数据库操作Service
-* @createDate 2025-04-16 15:52:57
+* @createDate 2025-04-17 15:23:47
 */
 public interface QuestionStemBlockService extends IService<QuestionStemBlock> {
 

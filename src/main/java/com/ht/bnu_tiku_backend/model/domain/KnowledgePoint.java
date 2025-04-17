@@ -2,6 +2,8 @@ package com.ht.bnu_tiku_backend.model.domain;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+
+import java.io.Serializable;
 import java.util.Date;
 import lombok.Data;
 
@@ -11,7 +13,7 @@ import lombok.Data;
  */
 @TableName(value ="knowledge_point")
 @Data
-public class KnowledgePoint {
+public class KnowledgePoint implements Serializable {
     /**
      * 知识点表主键
      */
