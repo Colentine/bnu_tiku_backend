@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 /**
 * @author huangtao
 * @description 针对表【question_revision_log(习题修订日志)】的数据库操作Service实现
-* @createDate 2025-04-16 15:52:57
+* @createDate 2025-04-17 15:23:47
 */
 @Service
 public class QuestionRevisionLogServiceImpl extends ServiceImpl<QuestionRevisionLogMapper, QuestionRevisionLog>

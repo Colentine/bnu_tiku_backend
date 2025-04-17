@@ -54,10 +54,10 @@ create table if not exists question_bank.question
 (
     id                   bigint unsigned auto_increment
         primary key,
-    parent_id bigint unsigned UNIQUE,
+    parent_id bigint unsigned,
     question_type        tinyint unsigned                      not null comment '题目类型：简单题（simple）或复合题（composite）',
     simple_question_type tinyint unsigned                      null comment '简单题的具体类型，选择、填空等',
-    subject              varchar(50) default '数学'             null comment '学科，默认数学',
+    subject              varchar(50) default 'math'             null comment '学科，默认数学',
     grade_id             bigint unsigned                       not null comment '年级，关联 grade 表',
     source_id            bigint unsigned                       not null comment '来源，关联 source 表',
     difficulty           float unsigned                        not null comment '题目难度系数',
