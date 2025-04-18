@@ -9,6 +9,7 @@ import com.ht.bnu_tiku_backend.mapper.*;
 import com.ht.bnu_tiku_backend.model.domain.*;
 import com.ht.bnu_tiku_backend.service.QuestionService;
 import jakarta.annotation.Resource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -58,6 +59,8 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question>
 
     @Resource
     private CoreCompetencyMapper coreCompetencyMapper;
+    @Autowired
+    private SourceMapper sourceMapper;
 
 
     @Override
@@ -67,6 +70,13 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question>
         List<KnowledgePoint> knowledgePoints = knowledgePointMapper.selectList(knowledgePointQueryWrapper);
         List<Long> knowledgePointIdlist = knowledgePoints.stream().map(KnowledgePoint::getId).toList();
         System.out.println(knowledgePointIdlist);
+        if(knowledgePointIdlist.isEmpty()){
+            List<Map<String, String>> results = new ArrayList<>();// 查询结果集合
+            Map<String, String> queryCount = new HashMap<>();
+            queryCount.put("query_count", "0");
+            results.add(queryCount);
+            return results;
+        }
         // 2. 在知识点试题关联表中，查询知识点下所有试题的id
         QueryWrapper<QuestionKnowledge> questionKnowledgeQueryWrapper = new QueryWrapper<>();
         questionKnowledgeQueryWrapper.in("knowledge_point_id", knowledgePointIdlist);
@@ -111,7 +121,9 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question>
                 questionQueryWrapper.eq("parent_id", questionId);
                 List<Question> questions = questionMapper.selectList(questionQueryWrapper);
                 HashMap<String, String> compositeQuestionResult = new HashMap<>();
+                compositeQuestionResult.put("question_id", String.valueOf(question.getId()));
                 compositeQuestionResult.put("question_type", String.valueOf(question.getQuestionType()));
+                compositeQuestionResult.put("question_source", sourceMapper.selectById(question.getSourceId()).getName());
                 compositeQuestionResult.put("difficulty", String.valueOf(question.getDifficulty()));
                 compositeQuestionResult.put("complexity_type", complexityTypeMapper.selectById(question.getComplexityTypeId()).getTypeName());
                 compositeQuestionResult.put("grade", gradeMapper.selectById(question.getGradeId()).getName());
@@ -213,7 +225,9 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question>
 
         HashMap<String, String> resultHashMap = new HashMap<>();
         if(!isSubQuestion) {
+            resultHashMap.put("question_id", String.valueOf(question.getId()));
             resultHashMap.put("question_type", String.valueOf(question.getQuestionType()));
+            resultHashMap.put("question_source", sourceMapper.selectById(question.getSourceId()).getName());
             resultHashMap.put("difficulty", String.valueOf(question.getDifficulty()));
             resultHashMap.put("complexity_type", complexityTypeMapper.selectById(question.getComplexityTypeId()).getTypeName());
             resultHashMap.put("grade", gradeMapper.selectById(question.getGradeId()).getName());
