@@ -427,8 +427,6 @@ public class BnuDatabaseTests {
             if(row.getRowNum() == 0) {
                 continue;
             }
-            String parentId = null;
-            StringBuilder pathBuilder = new StringBuilder();
             List<String> levelFiveKps = new ArrayList<>();
             for (int i = 0; i < 5; i++) {
                 Cell cell = row.getCell(i);
