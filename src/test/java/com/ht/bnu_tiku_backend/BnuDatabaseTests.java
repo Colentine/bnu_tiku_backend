@@ -1,7 +1,9 @@
 package com.ht.bnu_tiku_backend;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -10,14 +12,16 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ht.bnu_tiku_backend.mapper.*;
 import com.ht.bnu_tiku_backend.model.domain.*;
-import com.ht.bnu_tiku_backend.service.QuestionExplanationBlockService;
 import jakarta.annotation.Resource;
 import org.junit.Test;
 import org.junit.platform.commons.util.StringUtils;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
 
 @SpringBootTest
 @RunWith(SpringRunner.class)
@@ -98,7 +102,7 @@ public class BnuDatabaseTests {
      */
     @Test
     public void knowledgePointsInsert() throws IOException {
-        String path = "resources/xkw_knowledge_tree.json";
+        String path = "resources/KnowledgeTree/xkb_knowledge_tree.json";
 
         ObjectMapper mapper = new ObjectMapper();
 
@@ -401,11 +405,106 @@ public class BnuDatabaseTests {
     }
 
     @Test
-    public void test() {
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("{");
-        stringBuilder.append("\"questionId\":");
-        stringBuilder.append("***");
-        System.out.println(stringBuilder.toString());
+    public void excelDataAutoInsertTest() throws IOException {
+        String path = "resources/KnowledgeTree/xkb_node_to_id.json";
+
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        Map<String, String> knowledgeToId = objectMapper.readValue(
+                new File(path),
+                new TypeReference<>() {
+                }
+        );
+        System.out.println(knowledgeToId.get("数"));
+
+        String filePath = "resources/data/middle_school_1121.xlsx";
+        FileInputStream fis = new FileInputStream(filePath);
+        Workbook workbook = new XSSFWorkbook(fis);
+        Sheet sheet = workbook.getSheetAt(0);
+        Random random = new Random();
+        AtomicReference<Long> questionId = new AtomicReference<>(18L);
+        for (Row row : sheet) {
+            if(row.getRowNum() == 0) {
+                continue;
+            }
+            String parentId = null;
+            StringBuilder pathBuilder = new StringBuilder();
+            List<String> levelFiveKps = new ArrayList<>();
+            for (int i = 0; i < 5; i++) {
+                Cell cell = row.getCell(i);
+                if(cell == null) {
+                    continue;
+                }
+                cell.setCellType(CellType.STRING);
+                String name = cell.getStringCellValue().trim();
+                //System.out.println(name);
+                levelFiveKps.add(name);
+            }
+            Cell cell = row.getCell(5);
+            cell.setCellType(CellType.STRING);
+            String questionListString = cell.getStringCellValue().trim();
+            objectMapper
+                    .readValue(questionListString, new TypeReference<List<Map<String, String>>>() {
+            }).stream().forEach(questionMap->{
+                        int questionType = 0;
+                        int  simpleQuestionType = 0;
+                        long complexityTypeId =  random.nextInt(1, 10);
+                        long gradeId =  random.nextInt(1, 6);
+                        long sourceId = random.nextInt(1, 10);
+                        double difficulty = Math.random();
+                        long coreCompetencyId = random.nextInt(1, 10);
+                        Question metaQuestionInfo = new Question();
+                        metaQuestionInfo.setQuestionType(questionType);
+                        metaQuestionInfo.setSimpleQuestionType(simpleQuestionType);
+                        metaQuestionInfo.setGradeId(gradeId);
+                        metaQuestionInfo.setSourceId(sourceId);
+                        metaQuestionInfo.setDifficulty(difficulty);
+                        metaQuestionInfo.setComplexityTypeId(complexityTypeId);
+                        metaQuestionInfo.setCoreCompetencyId(coreCompetencyId);
+                        metaQuestionInfo.setCreatedBy(1L);
+                        questionMapper.insert(metaQuestionInfo);
+
+                        for(String kp:levelFiveKps)
+                        {
+                            String knowledgeId = knowledgeToId.get(kp);
+                            QuestionKnowledge questionKnowledge = new QuestionKnowledge();
+                            questionKnowledge.setQuestionId(questionId.get());
+                            questionKnowledge.setKnowledgePointId(Long.parseLong(knowledgeId));
+                            questionKnowledgeMapper.insert(questionKnowledge);
+                        }
+                        QuestionStemBlock questionStemBlock = new QuestionStemBlock();
+                        questionStemBlock.setQuestionId(questionId.get());
+                        questionStemBlock.setContentType(0);
+                        questionStemBlock.setPosition(0);
+                        questionStemBlock.setTextContent(questionMap.get("content"));
+                        questionStemBlockMapper.insert(questionStemBlock);
+
+                        QuestionAnswerBlock questionAnswerBlock = new QuestionAnswerBlock();
+                        questionAnswerBlock.setQuestionId(questionId.get());
+                        questionAnswerBlock.setContentType(0);
+                        questionAnswerBlock.setInteractiveIndex(0L);
+                        questionAnswerBlock.setAnswerText(questionMap.get("answer"));
+                        questionAnswerBlock.setPosition(0);
+                        questionAnswerBlockMapper.insert(questionAnswerBlock);
+
+                        QuestionExplanationBlock questionExplanationBlock = new QuestionExplanationBlock();
+                        questionExplanationBlock.setQuestionId(questionId.get());
+                        questionExplanationBlock.setExplanationType(0);
+                        questionExplanationBlock.setContentType(0);
+                        questionExplanationBlock.setExplanationText(questionMap.get("analysis"));
+                        questionExplanationBlock.setInteractiveIndex(0L);
+                        questionExplanationBlock.setPosition(0);
+                        questionExplanationBlockMapper.insert(questionExplanationBlock);
+
+                        questionId.getAndSet(questionId.get() + 1);
+                    });
+        }
+    }
+
+    @Test
+    public void excelDataAutoUpdateTest() throws IOException {
+        AtomicReference<Long> questionId = new AtomicReference<>(18L);
+        questionId.getAndSet(questionId.get() + 1);
+        System.out.println(questionId.get());
     }
 }
