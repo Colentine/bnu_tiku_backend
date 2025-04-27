@@ -12,6 +12,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ht.bnu_tiku_backend.mapper.*;
 import com.ht.bnu_tiku_backend.model.domain.*;
+import com.ht.bnu_tiku_backend.model.page.PageQueryQuestionResult;
+import com.ht.bnu_tiku_backend.service.QuestionService;
 import jakarta.annotation.Resource;
 import org.junit.Test;
 import org.junit.platform.commons.util.StringUtils;
@@ -58,6 +60,8 @@ public class BnuDatabaseTests {
     private GradeMapper gradeMapper;
     @Resource
     private CoreCompetencyMapper coreCompetencyMapper;
+    @Resource
+    private QuestionService questionService;
 
     /**
      * @description:  向数据库插入两个用户
@@ -69,7 +73,6 @@ public class BnuDatabaseTests {
     @Test
     public void userInsertTest(){
         User user = new User();
-        user.setId(1L);
         user.setUserAccount("00001");
         user.setUserName("kkkkk");
         user.setUserRealName("王大柱");
@@ -497,6 +500,15 @@ public class BnuDatabaseTests {
                         questionId.getAndSet(questionId.get() + 1);
                     });
         }
+    }
+
+    @Test
+    public void pagedQueryQuestionTest() throws IOException {
+        String kpName = "有理数";
+        long l = 1L;
+        long l1 = 10L;
+        PageQueryQuestionResult result = questionService.pageQueryQuestionsByKnowledgePoint(kpName, l, l1);
+//        System.out.println(result.toString());
     }
 
     @Test

@@ -23,6 +23,7 @@ public class QuestionController {
     @GetMapping("/search/kp/{name}")
     public List<Map<String, String>> searchQuestionByKnowledgePoint(@PathVariable(value = "name") String name)
             throws JsonProcessingException {
+        System.out.println(name);
         List<Map<String, String>> maps = questionService.queryQuestionsByKnowledgePoint(name);
         System.out.println(maps);
         return maps;
