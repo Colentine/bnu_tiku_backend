@@ -8,10 +8,7 @@ import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -32,7 +29,7 @@ public class KnowledgeLabelingTest {
         question.put("analysis", "移项后得2x=4，两边除以2得x=2");
 
         Map<String, Object> requestBodyMap = new HashMap<>();
-        requestBodyMap.put("top_k", 5);
+        requestBodyMap.put("top_k", Optional.of(5));
         requestBodyMap.put("question_list", List.of(question));
 
         ObjectMapper mapper = new ObjectMapper();

@@ -9,9 +9,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ht.bnu_tiku_backend.mapper.*;
 import com.ht.bnu_tiku_backend.model.domain.*;
-import com.ht.bnu_tiku_backend.model.page.PageQueryQuestionResult;
 import com.ht.bnu_tiku_backend.service.QuestionService;
 import com.ht.bnu_tiku_backend.utils.RecievedParameters.QuestionRecieved;
+import com.ht.bnu_tiku_backend.utils.page.PageQueryQuestionResult;
 import jakarta.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -110,13 +110,16 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question>
         List<QuestionKnowledge> questionKnowledgeList = questionKnowledgeMapper.selectList(questionKnowledgeWrapper);
 
         List<String> kpName = new ArrayList<>();
-        Map<Long, Long> questionIdToMaxKnowledgePointId = questionKnowledgeList.stream()
+        Map<Long, List<Long>> questionIdToKnowledgePointIdList = questionKnowledgeList.stream()
                 .collect(Collectors.groupingBy(
                         QuestionKnowledge::getQuestionId,
-                        Collectors.collectingAndThen(
-                                Collectors.mapping(QuestionKnowledge::getKnowledgePointId, Collectors.toList()),
-                                Collections::max // 找到每组最大的知识点ID
-                        )
+                        Collectors.mapping(QuestionKnowledge::getKnowledgePointId, Collectors.toList())
+                ));
+
+        Map<Long, Long> questionIdToMaxKnowledgePointId = questionIdToKnowledgePointIdList.entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> Collections.max(entry.getValue())
                 ));
 
         Map<Long, String> questionIdToKnowledgePointName = questionIdToMaxKnowledgePointId.entrySet().stream()
@@ -153,7 +156,7 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question>
             Integer questionType = question.getQuestionType();
             // 3.4 判断试题的类型
             if(questionType == 0){ // 如果是简单题，直接查询题干块、答案块、解析块
-                HashMap<String, String> simpleQuestionResult = SelectSimpleQuestion(false, question, sourceMap, complexityTypeMap, coreCompetencyMap, gradeMap, questionIdToKnowledgePointName);
+                HashMap<String, String> simpleQuestionResult = SelectSimpleQuestion(false, question, sourceMap, complexityTypeMap, coreCompetencyMap, gradeMap, questionIdToKnowledgePointName,  questionIdToKnowledgePointIdList);
                 results.add(simpleQuestionResult);
             }else{ // 如果是复合题，需要去查询所有小题，再查询小题的题干、答案、解析块
                 StringBuilder compositeQuestionStemStringBuilder = new StringBuilder();
@@ -177,12 +180,12 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question>
                     questions = parentIdToSubQuestions.get(questionId);
                 }
                 HashMap<String, String> compositeQuestionResult = new HashMap<>();
-                putQuestionTags(true, question, sourceMap, complexityTypeMap, coreCompetencyMap, gradeMap, questionIdToKnowledgePointName, compositeQuestionResult);
+                putQuestionTags(false, question, sourceMap, complexityTypeMap, coreCompetencyMap, gradeMap ,questionIdToKnowledgePointName, questionIdToKnowledgePointIdList, compositeQuestionResult);
                 compositeQuestionResult.put("composite_question_stem", compositeQuestionStemStringBuilder.toString());
                 ArrayList<HashMap<String, String>> subQuestionResults = new ArrayList<>();
                 if(questions != null){
                     for (Question subQuestion : questions) {
-                        HashMap<String, String> subQuestionResult = SelectSimpleQuestion(true, subQuestion, sourceMap, complexityTypeMap, coreCompetencyMap, gradeMap, questionIdToKnowledgePointName);
+                        HashMap<String, String> subQuestionResult = SelectSimpleQuestion(true, subQuestion, sourceMap, complexityTypeMap, coreCompetencyMap, gradeMap, questionIdToKnowledgePointName, questionIdToKnowledgePointIdList);
                         subQuestionResults.add(subQuestionResult);
                     }
                 }
@@ -301,7 +304,7 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question>
         return result;
     }
 
-    private HashMap<String, String> SelectSimpleQuestion(Boolean isSubQuestion, Question question, Map<Long, Source> sourceMap,Map<Long, ComplexityType> complexityTypeMap,Map<Long, CoreCompetency> coreCompetencyMap,Map<Long, Grade> gradeMap,Map<Long, String> questionIdToKnowledgePointName) throws JsonProcessingException {
+    private HashMap<String, String> SelectSimpleQuestion(Boolean isSubQuestion, Question question, Map<Long, Source> sourceMap,Map<Long, ComplexityType> complexityTypeMap,Map<Long, CoreCompetency> coreCompetencyMap,Map<Long, Grade> gradeMap,Map<Long, String> questionIdToKnowledgePointName, Map<Long, List<Long>> questionIdToKnowledgePointIdList) throws JsonProcessingException {
         StringBuilder questionStemStringBuilder = new StringBuilder();
         QueryWrapper<QuestionStemBlock> questionStemBlockQueryWrapper = new QueryWrapper<>();
         Long questionId = question.getId();
@@ -386,7 +389,7 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question>
         }
 
         HashMap<String, String> resultHashMap = new HashMap<>();
-        putQuestionTags(isSubQuestion, question, sourceMap, complexityTypeMap, coreCompetencyMap, gradeMap, questionIdToKnowledgePointName, resultHashMap);
+        putQuestionTags(isSubQuestion, question, sourceMap, complexityTypeMap, coreCompetencyMap, gradeMap, questionIdToKnowledgePointName, questionIdToKnowledgePointIdList, resultHashMap);
         resultHashMap.put("stem", questionStemStringBuilder.toString());
         resultHashMap.put("question_answer", questionAnswerStringBuilder.toString());
         resultHashMap.put("question_explanation", questionExplanationStringBuilder.toString());
@@ -399,7 +402,9 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question>
                                         Map<Long, CoreCompetency> coreCompetencyMap,
                                         Map<Long, Grade> gradeMap,
                                         Map<Long, String> questionIdToKnowledgePointName,
-                                        HashMap<String, String> resultHashMap) {
+                                        Map<Long, List<Long>> questionIdToKnowledgePointIdList,
+                                        HashMap<String, String> resultHashMap) throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
         if(!isSubQuestion) {
             resultHashMap.put("question_type", String.valueOf(question.getQuestionType()));
             resultHashMap.put("question_source", sourceMap.get(question.getSourceId()).getName());
@@ -407,6 +412,7 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question>
             resultHashMap.put("complexity_type", complexityTypeMap.get(question.getComplexityTypeId()).getTypeName());
             resultHashMap.put("grade", gradeMap.get(question.getGradeId()).getName());
             resultHashMap.put("knowledge_point", questionIdToKnowledgePointName.get(question.getId()));
+            resultHashMap.put("knowledge_point_list", objectMapper.writeValueAsString(questionIdToKnowledgePointIdList.get(question.getId())));
             resultHashMap.put("core_competency", coreCompetencyMap.get(question.getCoreCompetencyId()).getCompetencyName());
         }
         resultHashMap.put("question_id", String.valueOf(question.getId()));

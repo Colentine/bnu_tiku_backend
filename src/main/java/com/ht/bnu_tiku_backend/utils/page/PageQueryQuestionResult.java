@@ -1,4 +1,4 @@
-package com.ht.bnu_tiku_backend.model.page;
+package com.ht.bnu_tiku_backend.utils.page;
 
 import lombok.Data;
 import org.springframework.stereotype.Component;
@@ -10,7 +10,10 @@ import java.util.Map;
 @Data
 public class PageQueryQuestionResult {
     Long pageNo;
+
     Long pageSize;
+
     Long totalCount;
+
     List<Map<String, String>> questions;
 }

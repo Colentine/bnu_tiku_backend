@@ -12,8 +12,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ht.bnu_tiku_backend.mapper.*;
 import com.ht.bnu_tiku_backend.model.domain.*;
-import com.ht.bnu_tiku_backend.model.page.PageQueryQuestionResult;
 import com.ht.bnu_tiku_backend.service.QuestionService;
+import com.ht.bnu_tiku_backend.utils.page.PageQueryQuestionResult;
 import jakarta.annotation.Resource;
 import org.junit.Test;
 import org.junit.platform.commons.util.StringUtils;
@@ -512,9 +512,14 @@ public class BnuDatabaseTests {
     }
 
     @Test
-    public void excelDataAutoUpdateTest() throws IOException {
+    public void excelDataAutoUpdateTest() {
         AtomicReference<Long> questionId = new AtomicReference<>(18L);
         questionId.getAndSet(questionId.get() + 1);
         System.out.println(questionId.get());
+    }
+
+    @Test
+    public void findAllQuestionTest() {
+        QueryWrapper<Question> queryWrapper = new QueryWrapper<>();
     }
 }

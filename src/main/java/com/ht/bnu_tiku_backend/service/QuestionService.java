@@ -3,10 +3,9 @@ package com.ht.bnu_tiku_backend.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.ht.bnu_tiku_backend.model.domain.Question;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.ht.bnu_tiku_backend.model.page.PageQueryQuestionResult;
+import com.ht.bnu_tiku_backend.utils.page.PageQueryQuestionResult;
 import com.ht.bnu_tiku_backend.utils.RecievedParameters.QuestionRecieved;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
