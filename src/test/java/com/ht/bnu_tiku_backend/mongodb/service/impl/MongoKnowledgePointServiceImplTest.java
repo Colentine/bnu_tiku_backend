@@ -57,7 +57,6 @@ public class MongoKnowledgePointServiceImplTest {
             Update update = new Update().set("name_initials", PinYinTool.getInitials(knowledgePoint.getName()));
             mongoTemplate.updateFirst(query, update, KnowledgePoint.class);
         });
-
     }
 
 //    @Test

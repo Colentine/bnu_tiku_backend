@@ -1,10 +1,13 @@
-package com.ht.bnu_tiku_backend.mongodb.service.impl;
-import com.google.common.collect.Lists;
+package com.ht.bnu_tiku_backend.elasticsearch.service.impl;
 
+import co.elastic.clients.elasticsearch._types.FieldValue;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ht.bnu_tiku_backend.elasticsearch.model.Question;
+import com.ht.bnu_tiku_backend.elasticsearch.repository.EsQuestionRepository;
+import com.ht.bnu_tiku_backend.elasticsearch.service.EsQuestionService;
 import com.ht.bnu_tiku_backend.mapper.ComplexityTypeMapper;
 import com.ht.bnu_tiku_backend.mapper.CoreCompetencyMapper;
 import com.ht.bnu_tiku_backend.mapper.GradeMapper;
@@ -15,36 +18,44 @@ import com.ht.bnu_tiku_backend.model.domain.Grade;
 import com.ht.bnu_tiku_backend.model.domain.Source;
 import com.ht.bnu_tiku_backend.mongodb.model.*;
 import com.ht.bnu_tiku_backend.mongodb.repository.QuestionRepository;
-import com.ht.bnu_tiku_backend.mongodb.service.MongoQuestionService;
 import com.ht.bnu_tiku_backend.utils.page.PageQueryQuestionResult;
 import jakarta.annotation.Resource;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.elasticsearch.client.elc.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.client.elc.NativeQuery;
+import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
+import org.springframework.data.elasticsearch.core.SearchHit;
+import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.query.HighlightQuery;
+import org.springframework.data.elasticsearch.core.query.highlight.Highlight;
+import org.springframework.data.elasticsearch.core.query.highlight.HighlightField;
+import org.springframework.data.elasticsearch.core.query.highlight.HighlightParameters;
 import org.springframework.stereotype.Service;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.ht.bnu_tiku_backend.mongodb.service.impl.MongoMongoQuestionServiceImpl.*;
+
 @Service
-public class MongoMongoQuestionServiceImpl implements MongoQuestionService {
+public class EsQuestionServiceImpl implements EsQuestionService {
     private static final Map<String, String> nameToId;
     private static final Map<String, String> idToName;
 
     static {
-        ObjectMapper objectMapper = new ObjectMapper();
         String path = "resources/KnowledgeTree/xkb_node_to_id.json";
 
+        ObjectMapper mapper = new ObjectMapper();
 
         try {
-            nameToId = objectMapper.readValue(
-                   new File(path),
-                   new TypeReference<Map<String, String>>() {}
-           );
+            nameToId = mapper.readValue(
+                    new File(path),
+                    new TypeReference<Map<String, String>>() {}
+            );
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -53,12 +64,6 @@ public class MongoMongoQuestionServiceImpl implements MongoQuestionService {
                 .stream()
                 .collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
     }
-
-    @Resource
-    private ObjectMapper objectMapper;
-
-    @Resource
-    private QuestionRepository questionRepository;
 
     @Resource
     private CoreCompetencyMapper coreCompetencyMapper;
@@ -72,21 +77,22 @@ public class MongoMongoQuestionServiceImpl implements MongoQuestionService {
     @Resource
     private GradeMapper gradeMapper;
 
+    @Resource
+    private ObjectMapper objectMapper;
 
+    @Resource
+    private EsQuestionRepository esQuestionRepository;
 
+    @Resource
+    private ElasticsearchTemplate elasticsearchTemplate;
 
     @Override
     public void saveQuestion(Question question) {
-        questionRepository.save(question);
+        esQuestionRepository.save(question);
     }
 
     @Override
-    public List<Question> getAllQuestions() {
-        return questionRepository.findAll();
-    }
-
-    @Override
-    public PageQueryQuestionResult queryQuestionsByKnowledgePointNames(List<String> knowledgePointNames, Long pageNumber, Long pageSize) {
+    public PageQueryQuestionResult queryQuestionsByKnowledgePointNames(List<String> knowledgePointNames, Long pageNumber, Long pageSize) throws IOException {
         PageQueryQuestionResult pageQueryQuestionResult = new PageQueryQuestionResult();
 
         if(knowledgePointNames.isEmpty()){
@@ -95,28 +101,56 @@ public class MongoMongoQuestionServiceImpl implements MongoQuestionService {
         Pageable pageable = PageRequest.of(Math.toIntExact(pageNumber-1), Math.toIntExact(pageSize));
         List<Question> allQuestions = new ArrayList<>();
         if(knowledgePointNames.contains("beforeMount")){
-            Page<Question> allPages = questionRepository.findAll(pageable);
-            allQuestions.addAll(allPages.getContent());
-            pageQueryQuestionResult.setTotalCount(allPages.getTotalElements());
+            NativeQuery query = NativeQuery.builder()
+                    .withQuery(q -> q.matchAll(m -> m))
+                    .withPageable(pageable)
+                    .withTrackTotalHits(Boolean.TRUE)
+                    .build();
+            SearchHits<Question> allPages = elasticsearchTemplate.search(query, Question.class);
+            pageQueryQuestionResult.setTotalCount(allPages.getTotalHits());
+            allQuestions.addAll(allPages.stream().map(SearchHit::getContent).toList());
+            pageQueryQuestionResult.setTotalCount(allPages.getTotalHits());
         }else {
-            List<Long> knowledgePointIdlist = knowledgePointNames.stream().map(key -> {
+            List<Long> knowledgePointIdList = knowledgePointNames.stream().map(key -> {
                 String knowledgePointId = nameToId.get(key);
                 if (StringUtils.isEmpty(knowledgePointId)) {
                     return -1L;
                 }
                 return Long.valueOf(knowledgePointId);
             }).toList();
+
 //            System.out.println(knowledgePointIdlist);
             //List<Question> byKnowledgePointIdsIn = questionRepository.findByKnowledgePointIdsIn(knowledgePointIdlist);
             //System.out.println(byKnowledgePointIdsIn);
-            Page<Question> allPages = questionRepository.findByKnowledgePointIdsIn(knowledgePointIdlist, pageable);
-            allQuestions.addAll(allPages.getContent());
+
+            NativeQuery query = NativeQuery.builder()
+                    .withQuery(q -> q
+                            .terms(t -> t
+                                    .field("knowledge_point_ids")
+                                    .terms(ts -> ts.value(
+                                            knowledgePointIdList.stream().map(FieldValue::of).toList()
+                                    ))
+                            )
+                    )
+                    .withPageable(pageable)
+                    .withTrackTotalHits(Boolean.TRUE)
+                    .build();
+
+            SearchHits<Question> allPages = elasticsearchTemplate.search(query, Question.class);
+
+            allQuestions.addAll(allPages.stream().map(SearchHit::getContent).toList());
 //            System.out.println(allPages.getContent());
-            pageQueryQuestionResult.setTotalCount(allPages.getTotalElements());
+            pageQueryQuestionResult.setTotalCount(allPages.getTotalHits());
             if (allQuestions.isEmpty()) {
                 return new PageQueryQuestionResult();
             }
         }
+
+        queryQuestionsByIds(pageNumber, pageSize, allQuestions, pageQueryQuestionResult);
+        return pageQueryQuestionResult;
+    }
+
+    private void queryQuestionsByIds(Long pageNumber, Long pageSize, List<Question> allQuestions, PageQueryQuestionResult pageQueryQuestionResult) {
         List<Long> coreCompetencyIds = allQuestions.stream().map(Question::getCoreCompetencyId).toList();
         Map<Long, CoreCompetency> coreCompetencyMap = coreCompetencyMapper.selectBatchIds(coreCompetencyIds)
                 .stream()
@@ -176,7 +210,7 @@ public class MongoMongoQuestionServiceImpl implements MongoQuestionService {
             }else{
                 questionMap.put("composite_question_stem", stemText.toString());
                 ArrayList<HashMap<String, String>> subQuestionMaps = new ArrayList<>();
-                questionRepository.findByParentId(question.getQuestionId()).forEach(subQuestion -> {
+                esQuestionRepository.findByParentId(question.getQuestionId()).forEach(subQuestion -> {
                     HashMap<String, String> subQuestionMap = new HashMap<>();
                     StemBlock subQuestionStemBlock = subQuestion.getStemBlock();
                     StringBuilder subQuestionStemText = new StringBuilder(subQuestionStemBlock.getText());
@@ -194,7 +228,7 @@ public class MongoMongoQuestionServiceImpl implements MongoQuestionService {
                 });
                 StringBuilder subQuestionString = new StringBuilder();
                 try {
-                     subQuestionString.append(objectMapper.writeValueAsString(subQuestionMaps));
+                    subQuestionString.append(objectMapper.writeValueAsString(subQuestionMaps));
                 } catch (JsonProcessingException e) {
                     throw new RuntimeException(e);
                 }
@@ -205,19 +239,80 @@ public class MongoMongoQuestionServiceImpl implements MongoQuestionService {
         pageQueryQuestionResult.setPageSize(pageSize);
         pageQueryQuestionResult.setPageNo(pageNumber);
         pageQueryQuestionResult.setQuestions(queryResult);
+    }
+
+    @Override
+    public PageQueryQuestionResult queryQuestionsByKeyword(String keyword, Long pageNumber, Long pageSize) throws IOException {
+        PageQueryQuestionResult pageQueryQuestionResult = new PageQueryQuestionResult();
+
+        Pageable pageable = PageRequest.of(Math.toIntExact(pageNumber-1), Math.toIntExact(pageSize));
+        List<Question> allQuestions = new ArrayList<>();
+        if(keyword.isBlank()){
+            Page<Question> allPages = esQuestionRepository.findAll(pageable);
+            allQuestions.addAll(allPages.getContent());
+            pageQueryQuestionResult.setTotalCount(allPages.getTotalElements());
+        }else {
+            List<HighlightField> fields = new ArrayList<>();
+            fields.add(new HighlightField("stem_block.text"));
+            fields.add(new HighlightField("explanation_block.explanation.text"));
+            fields.add(new HighlightField("answer_block.text"));
+
+            NativeQuery query = NativeQuery.builder()
+                    .withQuery(q -> q
+                            .multiMatch(mm -> mm
+                                    .query(keyword)
+                                    .fields("stem_block.text^3"
+                                            , "explanation_block.explanation.text^2"
+                                            , "answer_block.text")
+                            )
+                    ).withHighlightQuery(new HighlightQuery
+                            (new Highlight(new HighlightParameters.HighlightParametersBuilder().withPreTags("<em style=\"color: red\">")
+                                    .withPostTags("</em>").build() , fields), Question.class))
+                    .withPageable(pageable)
+                    .build();
+
+            SearchHits<Question> searchHits = elasticsearchTemplate.search(query, Question.class);
+
+            allQuestions.addAll(searchHits.getSearchHits().stream()
+                    .map(searchHit -> {
+                        List<String> stemText = searchHit.getHighlightField("stem_block.text");
+                        System.out.println(searchHit.getContent().getStemBlock().getText());
+                        List<String> explanationText = searchHit.getHighlightField("explanation_block.explanation.text");
+                        List<String> answerText = searchHit.getHighlightField("answer_block.text");
+                        Question q = searchHit.getContent();
+                        if(!stemText.isEmpty()) {
+                            StemBlock stemBlock = q.getStemBlock();
+                            stemBlock.setText(String.join("", stemText));
+                            q.setStemBlock(stemBlock);
+                        }
+                        if(!explanationText.isEmpty()) {
+                            Explanation explanation = q.getExplanationBlock().getExplanation();
+                            explanation.setText(String.join("", explanationText));
+                            ExplanationBlock explanationBlock = q.getExplanationBlock();
+                            explanationBlock.setExplanation(explanation);
+                            q.setExplanationBlock(explanationBlock);
+                        }
+
+                        if(!answerText.isEmpty()) {
+                            AnswerBlock answerBlock = q.getAnswerBlock();
+                            answerBlock.setText(String.join("", answerText));
+                            q.setAnswerBlock(answerBlock);
+                        }
+                        return q;
+                    })
+                    .toList());
+            //System.out.println(allQuestions.getFirst());
+            pageQueryQuestionResult.setTotalCount(searchHits.getTotalHits());
+            if (allQuestions.isEmpty()) {
+                return new PageQueryQuestionResult();
+            }
+        }
+
+        queryQuestionsByIds(pageNumber, pageSize, allQuestions, pageQueryQuestionResult);
         return pageQueryQuestionResult;
     }
 
-    @NotNull
-    private StringBuilder insertTagsIntoResult(Question question,
-                                               boolean isSubQuestion,
-                                               HashMap<String, String> questionMap,
-                                               Map<Long, ComplexityType> complexityTypeMap,
-                                               Map<Long, CoreCompetency> coreCompetencyMap,
-                                               Map<Long, Grade> gradeMap,
-                                               Map<Long, Source> sourceMap,
-                                               Map<Long, Long> maxKnowledgePointIdMap) {
-
+    private StringBuilder insertTagsIntoResult(Question question, boolean isSubQuestion, HashMap<String, String> questionMap, Map<Long, ComplexityType> complexityTypeMap, Map<Long, CoreCompetency> coreCompetencyMap, Map<Long, Grade> gradeMap, Map<Long, Source> sourceMap, Map<Long, Long> maxKnowledgePointIdMap) {
         if (!isSubQuestion) {
             questionMap.put("complexity_type", complexityTypeMap.get(question.getComplexityId()).getTypeName());
             questionMap.put("core_competency", coreCompetencyMap.get(question.getCoreCompetencyId()).getCompetencyName());

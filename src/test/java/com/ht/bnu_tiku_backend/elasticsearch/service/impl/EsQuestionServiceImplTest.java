@@ -1,22 +1,31 @@
-package com.ht.bnu_tiku_backend.model.mongodb.service.impl;
+package com.ht.bnu_tiku_backend.elasticsearch.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ht.bnu_tiku_backend.elasticsearch.service.EsQuestionService;
 import com.ht.bnu_tiku_backend.mapper.ComplexityTypeMapper;
 import com.ht.bnu_tiku_backend.mapper.CoreCompetencyMapper;
 import com.ht.bnu_tiku_backend.mapper.GradeMapper;
 import com.ht.bnu_tiku_backend.mapper.SourceMapper;
 import com.ht.bnu_tiku_backend.model.domain.ComplexityType;
+import com.ht.bnu_tiku_backend.model.domain.CoreCompetency;
 import com.ht.bnu_tiku_backend.model.domain.Grade;
 import com.ht.bnu_tiku_backend.model.domain.Source;
-import com.ht.bnu_tiku_backend.model.domain.CoreCompetency;
-import com.ht.bnu_tiku_backend.mongodb.model.*;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.ht.bnu_tiku_backend.mongodb.model.Explanation;
+import com.ht.bnu_tiku_backend.mongodb.model.ExplanationBlock;
 import com.google.common.collect.Lists;
 
-import com.ht.bnu_tiku_backend.mongodb.model.Question;
-import com.ht.bnu_tiku_backend.mongodb.service.MongoUserService;
-import com.ht.bnu_tiku_backend.mongodb.service.impl.MongoMongoQuestionServiceImpl;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import com.ht.bnu_tiku_backend.mongodb.model.StemBlock;
+import com.ht.bnu_tiku_backend.mongodb.model.AnswerBlock;
+
+import com.ht.bnu_tiku_backend.elasticsearch.model.Question;
 import com.ht.bnu_tiku_backend.service.QuestionService;
 import jakarta.annotation.Resource;
 import org.junit.Test;
@@ -26,33 +35,32 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.io.IOException;
-import java.util.*;
-
+import static org.junit.jupiter.api.Assertions.*;
 @RunWith(SpringRunner.class)
 @SpringBootTest
-public class MongoMongoQuestionServiceImplTest {
+public class EsQuestionServiceImplTest {
     @Resource
-    private MongoMongoQuestionServiceImpl mongoQuestionService;
+    private EsQuestionServiceImpl esQuestionServiceImpl;
 
     @Resource
     private QuestionService questionService;
-    @Autowired
-    private GradeMapper gradeMapper;
-    @Autowired
-    private SourceMapper sourceMapper;
-    @Autowired
-    private CoreCompetencyMapper coreCompetencyMapper;
-    @Autowired
-    private ComplexityTypeMapper complexityTypeMapper;
-    @Autowired
-    private MongoUserService mongoUserService;
 
+    @Resource
+    private GradeMapper gradeMapper;
+
+    @Resource
+    private SourceMapper sourceMapper;
+
+    @Resource
+    private CoreCompetencyMapper coreCompetencyMapper;
+
+    @Resource
+    private ComplexityTypeMapper complexityTypeMapper;
 
     @Test
-    public void saveQuestionTest() {
+    public void insertSampleQuestionTest() {
         Question question = new Question();
-        question.setQuestionId(2L);
+        question.setQuestionId(0L);
         question.setQuestionType(0);
         question.setSimpleQuestionType(0);
         question.setParentId(0L);
@@ -63,43 +71,18 @@ public class MongoMongoQuestionServiceImplTest {
         question.setCoreCompetencyId(0L);
         question.setComplexityId(0L);
         question.setCreatedBy(0L);
+        question.setStemBlock(new StemBlock());
+        question.setAnswerBlock(new AnswerBlock());
+        question.setExplanationBlock(new ExplanationBlock());
+        question.setCreatedAt(LocalDateTime.now().toString());
+        question.setUpdatedAt(LocalDateTime.now().toString());
 
-        StemBlock stemBlock = new StemBlock();
-        stemBlock.setText("123");
-        Image image = new Image();
-        image.setUrl("");
-        image.setPosition(0L);
-        stemBlock.setImages(Collections.singletonList(image));
-        question.setStemBlock(stemBlock);
-
-        AnswerBlock answerBlock = new AnswerBlock();
-        answerBlock.setText("123");
-        Image image2 = new Image();
-        image2.setUrl("");
-        image2.setPosition(0L);
-        question.setAnswerBlock(answerBlock);
-
-        ExplanationBlock explanationBlock = new ExplanationBlock();
-        Explanation explanation = new Explanation();
-        explanation.setText("explanation!!!");
-        explanationBlock.setExplanation(explanation);
-        question.setExplanationBlock(explanationBlock);
-
-        mongoQuestionService.saveQuestion(question);
+        esQuestionServiceImpl.saveQuestion(question);
     }
 
     @Test
-    public void getAllQuestionsTest() {
-        List<Question> allQuestions = mongoQuestionService.getAllQuestions();
-        for (Question question : allQuestions) {
-            System.out.println(question.getExplanationBlock().getExplanation().getText());
-        }
-
-    }
-
-    @Test
-    public void InsertMysqlQuestionIntoMongoTest() throws JsonProcessingException {
-        questionService.queryQuestionsByKnowledgePoint("beforeMount").stream().forEach(mysqlQuestion -> {
+    public void InsertMysqlQuestionIntoEsTest() throws JsonProcessingException {
+        questionService.queryQuestionsByKnowledgePoint("beforeMount").forEach(mysqlQuestion -> {
             Question question = new Question();
             ObjectMapper objectMapper = new ObjectMapper();
             QueryWrapper<Grade> gradeQueryWrapper = new QueryWrapper<>();
@@ -145,7 +128,7 @@ public class MongoMongoQuestionServiceImplTest {
                 explanation.setText(mysqlQuestion.get("question_explanation"));
                 explanationBlock.setExplanation(explanation);
                 question.setExplanationBlock(explanationBlock);
-                mongoQuestionService.saveQuestion(question);
+                esQuestionServiceImpl.saveQuestion(question);
             }else{
                 StemBlock stemBlock = new StemBlock();
                 stemBlock.setText(mysqlQuestion.get("composite_question_stem"));
@@ -181,20 +164,26 @@ public class MongoMongoQuestionServiceImplTest {
                         explanation.setText(subQuestionMap.get("question_explanation"));
                         subQuestionExplanationBlock.setExplanation(explanation);
                         subQuestion.setExplanationBlock(subQuestionExplanationBlock);
-                        mongoQuestionService.saveQuestion(subQuestion);
+                        esQuestionServiceImpl.saveQuestion(subQuestion);
                     });
                 }
-                mongoQuestionService.saveQuestion(question);
+                esQuestionServiceImpl.saveQuestion(question);
             }
         });
     }
 
     @Test
-    public void queryQuestionsByKnowledgePointNames() throws IOException {
-        System.out.println(mongoQuestionService.queryQuestionsByKnowledgePointNames(
-                List.of("beforeMount"),
-                1L,
-                5L));
+    public void saveQuestion() {
+        System.out.println("yes");
+    }
 
+    @Test
+    public void queryQuestionsByKnowledgePointNames() throws IOException {
+        System.out.println(esQuestionServiceImpl.queryQuestionsByKnowledgePointNames(List.of("有理数"), 1L, 5L));
+    }
+
+    @Test
+    public void queryQuestionsByKeyword() throws IOException {
+        System.out.println(esQuestionServiceImpl.queryQuestionsByKeyword("数", 1L, 5L));
     }
 }
