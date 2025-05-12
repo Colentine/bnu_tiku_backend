@@ -261,8 +261,8 @@ public class EsQuestionServiceImpl implements EsQuestionService {
                     .withQuery(q -> q
                             .multiMatch(mm -> mm
                                     .query(keyword)
-                                    .fields("stem_block.text^3"
-                                            , "explanation_block.explanation.text^2"
+                                    .fields("stem_block.text"
+                                            , "explanation_block.explanation.text"
                                             , "answer_block.text")
                             )
                     ).withHighlightQuery(new HighlightQuery
@@ -276,7 +276,7 @@ public class EsQuestionServiceImpl implements EsQuestionService {
             allQuestions.addAll(searchHits.getSearchHits().stream()
                     .map(searchHit -> {
                         List<String> stemText = searchHit.getHighlightField("stem_block.text");
-                        System.out.println(searchHit.getContent().getStemBlock().getText());
+                        //System.out.println(searchHit.getContent().getStemBlock().getText());
                         List<String> explanationText = searchHit.getHighlightField("explanation_block.explanation.text");
                         List<String> answerText = searchHit.getHighlightField("answer_block.text");
                         Question q = searchHit.getContent();
