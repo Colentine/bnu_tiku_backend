@@ -6,7 +6,7 @@
 -- ==========================================
 -- 插入用户数据
 -- ==========================================
-INSERT INTO user (user_account, user_name, user_real_name, user_password, role, school_id, email)
+INSERT INTO user (user_account, user_name, user_real_name, user_password, user_role, school_id, email)
 values ('00003', 'asdwad1', '张小花', '1235123', '0', 2, 'xxxxx@qq.com'),
        ('00004', 'asdwad2', '张大花', 'qwdadw3', '1', 1, 'xxxxx@qq.com'),
        ('00005', 'asdwad3', '王明', '123awda5123', '1', 3, 'xxxxx@qq.com'),

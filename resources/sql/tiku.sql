@@ -177,7 +177,7 @@ create table if not exists question_bank.user
     user_name      varchar(255)                               null comment '用户名',
     user_real_name varchar(10)                                null comment '用户真实姓名',
     user_password  varchar(255)                               null comment '用户密码',
-    role           tinyint unsigned default '1'               null comment '用户角色，默认为teacher，可选值为admin、teacher',
+    user_role           tinyint unsigned default '1'               null comment '用户角色，默认为teacher，可选值为admin、teacher',
     school_id      smallint unsigned                          null comment '用户所属学校',
     email          varchar(255)                               null comment '用户邮箱',
     created_at     datetime         default CURRENT_TIMESTAMP null,

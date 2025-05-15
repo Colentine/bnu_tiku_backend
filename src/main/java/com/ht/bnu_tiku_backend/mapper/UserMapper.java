@@ -1,17 +1,16 @@
 package com.ht.bnu_tiku_backend.mapper;
 
-import com.ht.bnu_tiku_backend.model.domain.User;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.ht.bnu_tiku_backend.model.domain.User;
 
 /**
 * @author huangtao
 * @description 针对表【user(用户表)】的数据库操作Mapper
-* @createDate 2025-04-17 15:23:47
-* @Entity generator.domain.User
+* @createDate 2025-05-13 13:58:00
+* @Entity com.ht.bnu_tiku_backend.model.domain.User
 */
 public interface UserMapper extends BaseMapper<User> {
 
-    User selectById(long l);
 }
 
 

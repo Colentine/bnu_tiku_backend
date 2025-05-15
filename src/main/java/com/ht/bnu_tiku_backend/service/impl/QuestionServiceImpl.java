@@ -3,14 +3,12 @@ import java.util.ArrayList;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ht.bnu_tiku_backend.mapper.*;
 import com.ht.bnu_tiku_backend.model.domain.*;
 import com.ht.bnu_tiku_backend.service.QuestionService;
-import com.ht.bnu_tiku_backend.utils.RecievedParameters.QuestionRecieved;
 import com.ht.bnu_tiku_backend.utils.page.PageQueryQuestionResult;
 import jakarta.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +16,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
 * @author huangtao
@@ -226,16 +223,6 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question>
     @Override
     public List<Map<String, String>> queryQuestionsByDifficulty(String name){
         return List.of();
-    }
-
-    @Override
-    public void insertQuestion(QuestionRecieved question){
-
-    }
-
-    @Override
-    public void updateQuestion(QuestionRecieved question){
-
     }
 
     @Override
