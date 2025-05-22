@@ -4,6 +4,7 @@ import com.ht.bnu_tiku_backend.service.UserService;
 import com.ht.bnu_tiku_backend.utils.DTO.LoginResultDTO;
 import com.ht.bnu_tiku_backend.utils.DTO.UserDTO;
 import com.ht.bnu_tiku_backend.utils.ResponseResult.Result;
+import com.ht.bnu_tiku_backend.utils.UserHolder;
 import com.ht.bnu_tiku_backend.utils.request.UserLoginRequest;
 import com.ht.bnu_tiku_backend.utils.request.UserRegisterRequest;
 import jakarta.annotation.Resource;
@@ -25,8 +26,8 @@ public class UserController {
         return userService.register(userRegisterRequest);
     }
 
-    @GetMapping("/me")
+    @GetMapping("/current")
     public Result<UserDTO> currentUser() {
-        return userService.getCurrentUser();
+        return Result.ok(UserHolder.getUser());
     }
 }

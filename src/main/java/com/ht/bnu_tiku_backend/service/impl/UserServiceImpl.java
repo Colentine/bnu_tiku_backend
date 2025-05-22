@@ -98,11 +98,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     }
 
     @Override
-    public Result<UserDTO> getCurrentUser() {
-        return Result.ok(UserHolder.getUser());
-    }
-
-    @Override
     public Result<UserDTO> register(UserRegisterRequest req) {
         // 1. 密码一致性校验
         if (!StrUtil.equals(req.getUserPassword(), req.getCheckPassword())) {

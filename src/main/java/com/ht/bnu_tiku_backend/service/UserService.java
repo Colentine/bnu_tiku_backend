@@ -17,7 +17,5 @@ public interface UserService extends IService<User> {
 
     Result<LoginResultDTO> login(UserLoginRequest userLoginRequest);
 
-    Result<UserDTO> getCurrentUser();
-
     Result<UserDTO> register(UserRegisterRequest userRegisterRequest);
 }

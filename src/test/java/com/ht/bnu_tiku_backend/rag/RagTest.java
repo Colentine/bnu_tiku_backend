@@ -1,5 +1,6 @@
 package com.ht.bnu_tiku_backend.rag;
 
+import com.ht.bnu_tiku_backend.elasticsearch.service.impl.EsQuestionServiceImpl;
 import jakarta.annotation.Resource;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -11,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -20,8 +23,11 @@ public class RagTest {
     @Resource
     VectorStore vectorStore;
 
+    @Resource
+    EsQuestionServiceImpl esQuestionServiceImpl;
+
     @Test
-    public void esVectorStoreTest(){
+    public void esVectorStoreTest() throws IOException {
 
 //        List<Document> documents = List.of(
 //                new Document("Spring AI rocks!! Spring AI rocks!! Spring AI rocks!! Spring AI rocks!! Spring AI rocks!!", Map.of("meta1", "meta1")),
@@ -30,8 +36,8 @@ public class RagTest {
 //
 //        vectorStore.add(documents);
 
-        List<Document> results = vectorStore.similaritySearch(SearchRequest.builder().query("Spring").topK(5).build());
-        System.out.println(results);
-        System.out.println(properties.getIndexName());
+//        List<Document> results = vectorStore.similaritySearch(SearchRequest.builder().query("Spring").topK(5).build());
+//        System.out.println(results);
+        System.out.println(esQuestionServiceImpl.queryQuestionsByKnowledgePointNames(Collections.singletonList("beforeMount"), 1L, 10L));
     }
 }
