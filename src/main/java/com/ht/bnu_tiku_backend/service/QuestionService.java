@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.ht.bnu_tiku_backend.model.domain.Question;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.ht.bnu_tiku_backend.utils.page.PageQueryQuestionResult;
-import com.ht.bnu_tiku_backend.utils.RecievedParameters.QuestionRecieved;
 
 import java.util.List;
 import java.util.Map;
@@ -58,22 +57,6 @@ public interface QuestionService extends IService<Question> {
      */
     //TODO
     List<Map<String,String>> queryQuestionsByDifficulty(String name);
-
-    /**
-     * 向数据库中增加题目
-     * @param question
-     * @throws JsonProcessingException
-     */
-    //TODO
-    void insertQuestion(QuestionRecieved question);
-
-    /**
-     * 修改数据库中的题目
-     * @param question
-     * @throws JsonProcessingException
-     */
-    //TODO
-    void updateQuestion(QuestionRecieved question);
 
     /**
      * 根据id删题

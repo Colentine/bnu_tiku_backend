@@ -43,8 +43,8 @@ import static com.ht.bnu_tiku_backend.mongodb.service.impl.MongoMongoQuestionSer
 
 @Service
 public class EsQuestionServiceImpl implements EsQuestionService {
-    private static final Map<String, String> nameToId;
-    private static final Map<String, String> idToName;
+    public static final Map<String, String> nameToId;
+    public static final Map<String, String> idToName;
 
     static {
         String path = "resources/KnowledgeTree/xkb_node_to_id.json";
@@ -92,7 +92,7 @@ public class EsQuestionServiceImpl implements EsQuestionService {
     }
 
     @Override
-    public PageQueryQuestionResult queryQuestionsByKnowledgePointNames(List<String> knowledgePointNames, Long pageNumber, Long pageSize) throws IOException {
+    public PageQueryQuestionResult queryQuestionsByKnowledgePointNames(List<String> knowledgePointNames, Long pageNumber, Long pageSize) {
         PageQueryQuestionResult pageQueryQuestionResult = new PageQueryQuestionResult();
 
         if(knowledgePointNames.isEmpty()){
@@ -172,7 +172,7 @@ public class EsQuestionServiceImpl implements EsQuestionService {
                 .stream()
                 .collect(Collectors.toMap(Grade::getId, g -> g));
 
-        Map<Long, List<Long>> knowledgePointIdMap = allQuestions
+        Map<Long, List<Long>> knowledgePointIdsMap = allQuestions
                 .stream()
                 .collect(Collectors.toMap(Question::getQuestionId, question -> {
                     if(question.getParentId() == null){
@@ -180,7 +180,7 @@ public class EsQuestionServiceImpl implements EsQuestionService {
                     }
                     return List.of();
                 }));
-        Map<Long, Long> maxKnowledgePointIdMap = knowledgePointIdMap
+        Map<Long, Long> maxKnowledgePointIdMap = knowledgePointIdsMap
                 .entrySet()
                 .stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, e ->{
@@ -203,7 +203,8 @@ public class EsQuestionServiceImpl implements EsQuestionService {
                     coreCompetencyMap,
                     gradeMap,
                     sourceMap,
-                    maxKnowledgePointIdMap);
+                    maxKnowledgePointIdMap,
+                    knowledgePointIdsMap);
             if(question.getQuestionType().equals(0)) {
                 questionMap.put("stem", stemText.toString());
                 insertBlockTextIntoResult(question, questionMap);
@@ -222,7 +223,8 @@ public class EsQuestionServiceImpl implements EsQuestionService {
                             null,
                             null,
                             null,
-                            null);
+                            null,
+                             knowledgePointIdsMap);
                     insertBlockTextIntoResult(subQuestion, subQuestionMap);
                     subQuestionMaps.add(subQuestionMap);
                 });
@@ -312,7 +314,14 @@ public class EsQuestionServiceImpl implements EsQuestionService {
         return pageQueryQuestionResult;
     }
 
-    private StringBuilder insertTagsIntoResult(Question question, boolean isSubQuestion, HashMap<String, String> questionMap, Map<Long, ComplexityType> complexityTypeMap, Map<Long, CoreCompetency> coreCompetencyMap, Map<Long, Grade> gradeMap, Map<Long, Source> sourceMap, Map<Long, Long> maxKnowledgePointIdMap) {
+    private StringBuilder insertTagsIntoResult(Question question,
+                                               boolean isSubQuestion,
+                                               HashMap<String, String> questionMap,
+                                               Map<Long, ComplexityType> complexityTypeMap,
+                                               Map<Long, CoreCompetency> coreCompetencyMap,
+                                               Map<Long, Grade> gradeMap, Map<Long, Source> sourceMap,
+                                               Map<Long, Long> maxKnowledgePointIdMap,
+                                               Map<Long, List<Long>> knowledgePointIdsMap ) {
         if (!isSubQuestion) {
             questionMap.put("complexity_type", complexityTypeMap.get(question.getComplexityId()).getTypeName());
             questionMap.put("core_competency", coreCompetencyMap.get(question.getCoreCompetencyId()).getCompetencyName());
@@ -323,6 +332,17 @@ public class EsQuestionServiceImpl implements EsQuestionService {
                     maxKnowledgePointIdMap
                             .get(question.getQuestionId()).toString()
             ));
+
+            Set<String> knowledgePointNames = knowledgePointIdsMap.get(question.getQuestionId())
+                    .stream()
+                    .map(knowledgePointId -> idToName.get(knowledgePointId.toString()))
+                    .collect(Collectors.toSet());
+
+            try {
+                questionMap.put("knowledge_points", objectMapper.writeValueAsString(knowledgePointNames));
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
 
             StringBuilder knowledgePointIds = new StringBuilder();
             try {

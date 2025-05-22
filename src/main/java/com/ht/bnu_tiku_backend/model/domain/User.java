@@ -1,8 +1,7 @@
 package com.ht.bnu_tiku_backend.model.domain;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
+
 import java.util.Date;
 import lombok.Data;
 
@@ -42,7 +41,7 @@ public class User {
     /**
      * 用户角色，默认为teacher，可选值为admin、teacher
      */
-    private Integer role;
+    private Integer userRole;
 
     /**
      * 用户所属学校
@@ -55,19 +54,56 @@ public class User {
     private String email;
 
     /**
-     * 
+     * 创建时间
      */
     private Date createdAt;
 
     /**
-     * 
+     * 更新时间
      */
     private Date updatedAt;
 
     /**
-     * 
+     * 用户头像
      */
     private String avatarUrl;
+
+    /**
+     * 用户状态
+     */
+    private Integer status;
+
+    /**
+     * 最后一次登陆时间
+     */
+    private Date lastLoginTime;
+
+    /**
+     * 登录IP
+     */
+    private String loginIp;
+
+    /**
+     * 性别
+     */
+    private Integer gender;
+
+    /**
+     * 用户简介
+     */
+    private String userDescription;
+
+    /**
+     * 用户生日
+     */
+    private Date birthday;
+
+    /**
+     * 逻辑删除标志
+     */
+    @TableLogic
+    @TableField("is_deleted")
+    private Integer isDeleted;
 
     @Override
     public boolean equals(Object that) {
@@ -86,12 +122,19 @@ public class User {
             && (this.getUserName() == null ? other.getUserName() == null : this.getUserName().equals(other.getUserName()))
             && (this.getUserRealName() == null ? other.getUserRealName() == null : this.getUserRealName().equals(other.getUserRealName()))
             && (this.getUserPassword() == null ? other.getUserPassword() == null : this.getUserPassword().equals(other.getUserPassword()))
-            && (this.getRole() == null ? other.getRole() == null : this.getRole().equals(other.getRole()))
+            && (this.getUserRole() == null ? other.getUserRole() == null : this.getUserRole().equals(other.getUserRole()))
             && (this.getSchoolId() == null ? other.getSchoolId() == null : this.getSchoolId().equals(other.getSchoolId()))
             && (this.getEmail() == null ? other.getEmail() == null : this.getEmail().equals(other.getEmail()))
             && (this.getCreatedAt() == null ? other.getCreatedAt() == null : this.getCreatedAt().equals(other.getCreatedAt()))
             && (this.getUpdatedAt() == null ? other.getUpdatedAt() == null : this.getUpdatedAt().equals(other.getUpdatedAt()))
-            && (this.getAvatarUrl() == null ? other.getAvatarUrl() == null : this.getAvatarUrl().equals(other.getAvatarUrl()));
+            && (this.getAvatarUrl() == null ? other.getAvatarUrl() == null : this.getAvatarUrl().equals(other.getAvatarUrl()))
+            && (this.getStatus() == null ? other.getStatus() == null : this.getStatus().equals(other.getStatus()))
+            && (this.getLastLoginTime() == null ? other.getLastLoginTime() == null : this.getLastLoginTime().equals(other.getLastLoginTime()))
+            && (this.getLoginIp() == null ? other.getLoginIp() == null : this.getLoginIp().equals(other.getLoginIp()))
+            && (this.getGender() == null ? other.getGender() == null : this.getGender().equals(other.getGender()))
+            && (this.getUserDescription() == null ? other.getUserDescription() == null : this.getUserDescription().equals(other.getUserDescription()))
+            && (this.getBirthday() == null ? other.getBirthday() == null : this.getBirthday().equals(other.getBirthday()))
+            && (this.getIsDeleted() == null ? other.getIsDeleted() == null : this.getIsDeleted().equals(other.getIsDeleted()));
     }
 
     @Override
@@ -103,12 +146,19 @@ public class User {
         result = prime * result + ((getUserName() == null) ? 0 : getUserName().hashCode());
         result = prime * result + ((getUserRealName() == null) ? 0 : getUserRealName().hashCode());
         result = prime * result + ((getUserPassword() == null) ? 0 : getUserPassword().hashCode());
-        result = prime * result + ((getRole() == null) ? 0 : getRole().hashCode());
+        result = prime * result + ((getUserRole() == null) ? 0 : getUserRole().hashCode());
         result = prime * result + ((getSchoolId() == null) ? 0 : getSchoolId().hashCode());
         result = prime * result + ((getEmail() == null) ? 0 : getEmail().hashCode());
         result = prime * result + ((getCreatedAt() == null) ? 0 : getCreatedAt().hashCode());
         result = prime * result + ((getUpdatedAt() == null) ? 0 : getUpdatedAt().hashCode());
         result = prime * result + ((getAvatarUrl() == null) ? 0 : getAvatarUrl().hashCode());
+        result = prime * result + ((getStatus() == null) ? 0 : getStatus().hashCode());
+        result = prime * result + ((getLastLoginTime() == null) ? 0 : getLastLoginTime().hashCode());
+        result = prime * result + ((getLoginIp() == null) ? 0 : getLoginIp().hashCode());
+        result = prime * result + ((getGender() == null) ? 0 : getGender().hashCode());
+        result = prime * result + ((getUserDescription() == null) ? 0 : getUserDescription().hashCode());
+        result = prime * result + ((getBirthday() == null) ? 0 : getBirthday().hashCode());
+        result = prime * result + ((getIsDeleted() == null) ? 0 : getIsDeleted().hashCode());
         return result;
     }
 
@@ -123,12 +173,19 @@ public class User {
         sb.append(", userName=").append(userName);
         sb.append(", userRealName=").append(userRealName);
         sb.append(", userPassword=").append(userPassword);
-        sb.append(", role=").append(role);
+        sb.append(", useRole=").append(userRole);
         sb.append(", schoolId=").append(schoolId);
         sb.append(", email=").append(email);
         sb.append(", createdAt=").append(createdAt);
         sb.append(", updatedAt=").append(updatedAt);
         sb.append(", avatarUrl=").append(avatarUrl);
+        sb.append(", status=").append(status);
+        sb.append(", lastLoginTime=").append(lastLoginTime);
+        sb.append(", loginIp=").append(loginIp);
+        sb.append(", gender=").append(gender);
+        sb.append(", userDescription=").append(userDescription);
+        sb.append(", birthday=").append(birthday);
+        sb.append(", isDeleted=").append(isDeleted);
         sb.append("]");
         return sb.toString();
     }

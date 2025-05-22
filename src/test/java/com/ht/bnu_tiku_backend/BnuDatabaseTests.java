@@ -6,6 +6,8 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
+import cn.hutool.crypto.SecureUtil;
+import cn.hutool.crypto.digest.MD5;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -77,7 +79,7 @@ public class BnuDatabaseTests {
         user.setUserName("kkkkk");
         user.setUserRealName("王大柱");
         user.setUserPassword("123456");
-        user.setRole(1);
+        user.setUserRole(0);
         user.setSchoolId(0);
         user.setEmail("xxxxxxxx@qq.com");
         user.setAvatarUrl("");
@@ -87,7 +89,7 @@ public class BnuDatabaseTests {
         user1.setUserName("kkkkz");
         user1.setUserRealName("王小柱");
         user1.setUserPassword("12344");
-        user1.setRole(0);
+        user1.setUserRole(0);
         user1.setSchoolId(2);
         user1.setEmail("yyyyyyy@qq.com");
         user1.setAvatarUrl("");
@@ -521,5 +523,16 @@ public class BnuDatabaseTests {
     @Test
     public void findAllQuestionTest() {
         QueryWrapper<Question> queryWrapper = new QueryWrapper<>();
+    }
+
+    @Test
+    public void logicDeleteUserTest(){
+        userMapper.deleteById(16L);
+    }
+
+    @Test
+    public void md5EncryptTest(){
+        String s = SecureUtil.md5("12344");
+        System.out.println(s);
     }
 }
