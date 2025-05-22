@@ -15,7 +15,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**") // 匹配所有请求
-                .allowedOrigins("http://tiku.w1.luyouxia.net/") // 允许的前端源
+                .allowedOriginPatterns("*") // 允许的前端源
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true); // 允许携带 cookie
