@@ -11,7 +11,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 @Data
@@ -63,9 +63,9 @@ public class Question {
 
     @CreatedDate
     @Field(name = "created_at", type = FieldType.Date)
-    private String createdAt;
+    private Date createdAt;
 
     @LastModifiedDate
     @Field(name = "updated_at", type = FieldType.Date)
-    private String updatedAt;
+    private Date updatedAt;
 }

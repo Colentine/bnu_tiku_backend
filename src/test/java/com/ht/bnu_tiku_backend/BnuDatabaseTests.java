@@ -75,7 +75,7 @@ public class BnuDatabaseTests {
     @Test
     public void userInsertTest(){
         User user = new User();
-        user.setUserAccount("00001");
+        user.setUserAccount("000001");
         user.setUserName("kkkkk");
         user.setUserRealName("王大柱");
         user.setUserPassword("123456");
@@ -85,7 +85,7 @@ public class BnuDatabaseTests {
         user.setAvatarUrl("");
 
         User user1 = new User();
-        user1.setUserAccount("00002");
+        user1.setUserAccount("000002");
         user1.setUserName("kkkkz");
         user1.setUserRealName("王小柱");
         user1.setUserPassword("12344");

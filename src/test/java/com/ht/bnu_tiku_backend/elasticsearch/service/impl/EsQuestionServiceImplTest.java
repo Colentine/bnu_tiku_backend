@@ -3,6 +3,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ht.bnu_tiku_backend.elasticsearch.repository.EsQuestionRepository;
 import com.ht.bnu_tiku_backend.elasticsearch.service.EsQuestionService;
 import com.ht.bnu_tiku_backend.mapper.ComplexityTypeMapper;
 import com.ht.bnu_tiku_backend.mapper.CoreCompetencyMapper;
@@ -33,6 +34,7 @@ import org.junit.platform.commons.util.StringUtils;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -41,6 +43,9 @@ import static org.junit.jupiter.api.Assertions.*;
 public class EsQuestionServiceImplTest {
     @Resource
     private EsQuestionServiceImpl esQuestionServiceImpl;
+
+    @Resource
+    private EsQuestionRepository esQuestionRepository;
 
     @Resource
     private QuestionService questionService;
@@ -74,8 +79,6 @@ public class EsQuestionServiceImplTest {
         question.setStemBlock(new StemBlock());
         question.setAnswerBlock(new AnswerBlock());
         question.setExplanationBlock(new ExplanationBlock());
-        question.setCreatedAt(LocalDateTime.now().toString());
-        question.setUpdatedAt(LocalDateTime.now().toString());
 
         esQuestionServiceImpl.saveQuestion(question);
     }
@@ -185,5 +188,10 @@ public class EsQuestionServiceImplTest {
     @Test
     public void queryQuestionsByKeyword() throws IOException {
         System.out.println(esQuestionServiceImpl.queryQuestionsByKeyword("数", 1L, 5L));
+    }
+
+    @Test
+    public void deleteIndexTest() {
+        esQuestionRepository.deleteAll();
     }
 }

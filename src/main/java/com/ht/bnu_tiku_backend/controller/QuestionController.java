@@ -44,17 +44,6 @@ public class QuestionController {
 //        return questionService.pageQueryQuestionsByKnowledgePoint(name, pageNumber, pageSize);
 //    }
 
-    @GetMapping("/search/kp/{name}/{pageNumber}/{pageSize}")
-    public PageQueryQuestionResult searchQuestionByKnowledgePoint(@PathVariable(value = "name") String name
-            , @PathVariable(value = "pageNumber") Long pageNumber
-            , @PathVariable(value = "pageSize") Long pageSize)
-            throws IOException {
-        System.out.println(name);
-
-        return  mongoQuestionService.queryQuestionsByKnowledgePointNames(List.of(name.strip()),
-                pageNumber,
-                pageSize);
-    }
 //    @GetMapping("/search/kp/{name}/{pageNumber}/{pageSize}")
 //    public PageQueryQuestionResult searchQuestionByKnowledgePoint(@PathVariable(value = "name") String name
 //            , @PathVariable(value = "pageNumber") Long pageNumber
@@ -62,10 +51,21 @@ public class QuestionController {
 //            throws IOException {
 //        System.out.println(name);
 //
-//        return  esQuestionService.queryQuestionsByKnowledgePointNames(List.of(name.strip()),
+//        return  mongoQuestionService.queryQuestionsByKnowledgePointNames(List.of(name.strip()),
 //                pageNumber,
 //                pageSize);
 //    }
+    @GetMapping("/search/kp/{name}/{pageNumber}/{pageSize}")
+    public PageQueryQuestionResult searchQuestionByKnowledgePoint(@PathVariable(value = "name") String name
+            , @PathVariable(value = "pageNumber") Long pageNumber
+            , @PathVariable(value = "pageSize") Long pageSize)
+            throws IOException {
+        System.out.println(name);
+
+        return  esQuestionService.queryQuestionsByKnowledgePointNames(List.of(name.strip()),
+                pageNumber,
+                pageSize);
+    }
 
     @GetMapping("/search/keyword/{name}/{pageNumber}/{pageSize}")
     public PageQueryQuestionResult searchQuestionByKeyword(@PathVariable(value = "name") String name
