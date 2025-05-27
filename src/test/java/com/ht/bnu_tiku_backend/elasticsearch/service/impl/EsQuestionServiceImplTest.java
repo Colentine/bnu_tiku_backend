@@ -189,9 +189,4 @@ public class EsQuestionServiceImplTest {
     public void queryQuestionsByKeyword() throws IOException {
         System.out.println(esQuestionServiceImpl.queryQuestionsByKeyword("数", 1297L, 10L));
     }
-
-    @Test
-    public void queryQuestionsByKeywordAndPage() throws IOException {
-        esQuestionRepository.deleteAll();
-    }
 }
