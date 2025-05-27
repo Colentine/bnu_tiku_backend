@@ -182,16 +182,16 @@ public class EsQuestionServiceImplTest {
 
     @Test
     public void queryQuestionsByKnowledgePointNames() throws IOException {
-        System.out.println(esQuestionServiceImpl.queryQuestionsByKnowledgePointNames(List.of("有理数"), 1L, 5L));
+        System.out.println(esQuestionServiceImpl.queryQuestionsByKnowledgePointNames(List.of("beforeMount"), 1297L, 10L));
     }
 
     @Test
     public void queryQuestionsByKeyword() throws IOException {
-        System.out.println(esQuestionServiceImpl.queryQuestionsByKeyword("数", 1L, 5L));
+        System.out.println(esQuestionServiceImpl.queryQuestionsByKeyword("数", 1297L, 10L));
     }
 
     @Test
-    public void deleteIndexTest() {
+    public void queryQuestionsByKeywordAndPage() throws IOException {
         esQuestionRepository.deleteAll();
     }
 }

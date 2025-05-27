@@ -62,9 +62,13 @@ public class QuestionController {
             throws IOException {
         System.out.println(name);
 
-        return  esQuestionService.queryQuestionsByKnowledgePointNames(List.of(name.strip()),
+        PageQueryQuestionResult pageQueryQuestionResult = esQuestionService.queryQuestionsByKnowledgePointNames(List.of(name.strip()),
                 pageNumber,
                 pageSize);
+
+        System.out.println(pageQueryQuestionResult);
+
+        return  pageQueryQuestionResult;
     }
 
     @GetMapping("/search/keyword/{name}/{pageNumber}/{pageSize}")
