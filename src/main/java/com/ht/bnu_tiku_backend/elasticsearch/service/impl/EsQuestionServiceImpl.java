@@ -1,6 +1,8 @@
 package com.ht.bnu_tiku_backend.elasticsearch.service.impl;
 
 import co.elastic.clients.elasticsearch._types.FieldValue;
+import co.elastic.clients.elasticsearch._types.query_dsl.RangeQuery;
+import co.elastic.clients.json.JsonData;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -17,9 +19,26 @@ import com.ht.bnu_tiku_backend.model.domain.CoreCompetency;
 import com.ht.bnu_tiku_backend.model.domain.Grade;
 import com.ht.bnu_tiku_backend.model.domain.Source;
 import com.ht.bnu_tiku_backend.mongodb.model.*;
+import com.ht.bnu_tiku_backend.mongodb.model.Image;
 import com.ht.bnu_tiku_backend.mongodb.repository.QuestionRepository;
 import com.ht.bnu_tiku_backend.utils.page.PageQueryQuestionResult;
+import com.ht.bnu_tiku_backend.utils.request.QuestionSearchRequest;
+import com.latextoword.Latex_Word;
 import jakarta.annotation.Resource;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.apache.poi.util.Units;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.apache.poi.xwpf.usermodel.XWPFParagraph;
+import org.apache.poi.xwpf.usermodel.XWPFRun;
+import org.apache.xmlbeans.XmlObject;
+import org.docx4j.XmlUtils;
+import org.docx4j.math.CTOMathPara;
+import org.docx4j.math.ObjectFactory;
+import org.docx4j.model.structure.PageSizePaper;
+import org.docx4j.openpackaging.exceptions.Docx4JException;
+import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
+import org.docx4j.openpackaging.parts.WordprocessingML.MainDocumentPart;
+import org.docx4j.wml.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -35,11 +54,17 @@ import org.springframework.data.elasticsearch.core.query.highlight.Highlight;
 import org.springframework.data.elasticsearch.core.query.highlight.HighlightField;
 import org.springframework.data.elasticsearch.core.query.highlight.HighlightParameters;
 import org.springframework.stereotype.Service;
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
-import java.util.stream.Collectors;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.*;
+import java.net.URL;
+import java.util.*;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import static com.ht.bnu_tiku_backend.mongodb.service.impl.MongoMongoQuestionServiceImpl.*;
 
 @Service
@@ -48,23 +73,23 @@ public class EsQuestionServiceImpl implements EsQuestionService {
     public static final Map<String, String> idToName;
 
     static {
-        String path = "resources/KnowledgeTree/xkb_node_to_id.json";
-
-        ObjectMapper mapper = new ObjectMapper();
-
-        try {
-            nameToId = mapper.readValue(
-                    new File(path),
-                    new TypeReference<Map<String, String>>() {}
-            );
+        ObjectMapper objectMapper = new ObjectMapper();
+        String path = "KnowledgeTree/xkb_node_to_id.json";
+        try (
+                InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(path)
+        ) {
+            if (is == null) {
+                throw new RuntimeException("字典文件找不到：" + path + "，请确认已放到resources目录下");
+            }
+            nameToId = objectMapper.readValue(is, new TypeReference<Map<String, String>>() {});
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
         idToName = nameToId.entrySet()
                 .stream()
                 .collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
     }
+
 
     @Resource
     private CoreCompetencyMapper coreCompetencyMapper;
@@ -86,6 +111,8 @@ public class EsQuestionServiceImpl implements EsQuestionService {
 
     @Resource
     private ElasticsearchTemplate elasticsearchTemplate;
+    private String htmlLike;
+    private RangeQuery.Builder range;
 
     @Override
     public void saveQuestion(Question question) {
@@ -108,7 +135,6 @@ public class EsQuestionServiceImpl implements EsQuestionService {
                     .withTrackTotalHits(Boolean.TRUE)
                     .build();
             SearchHits<Question> allPages = elasticsearchTemplate.search(query, Question.class);
-            pageQueryQuestionResult.setTotalCount(allPages.getTotalHits());
             allQuestions.addAll(allPages.stream().map(SearchHit::getContent).toList());
             pageQueryQuestionResult.setTotalCount(allPages.getTotalHits());
         }else {
@@ -147,11 +173,14 @@ public class EsQuestionServiceImpl implements EsQuestionService {
             }
         }
 
-        queryQuestionsByIds(pageNumber, pageSize, allQuestions, pageQueryQuestionResult);
+        List<Map<String, String>> queryResult = queryQuestionsByIds(allQuestions);
+        pageQueryQuestionResult.setPageSize(pageSize);
+        pageQueryQuestionResult.setPageNo(pageNumber);
+        pageQueryQuestionResult.setQuestions(queryResult);
         return pageQueryQuestionResult;
     }
 
-    private void queryQuestionsByIds(Long pageNumber, Long pageSize, List<Question> allQuestions, PageQueryQuestionResult pageQueryQuestionResult) {
+    private List<Map<String, String>> queryQuestionsByIds(List<Question> allQuestions) {
         List<Long> coreCompetencyIds = allQuestions.stream().map(Question::getCoreCompetencyId).toList();
         Map<Long, CoreCompetency> coreCompetencyMap = coreCompetencyMapper.selectBatchIds(coreCompetencyIds)
                 .stream()
@@ -239,9 +268,7 @@ public class EsQuestionServiceImpl implements EsQuestionService {
             }
             queryResult.add(questionMap);
         });
-        pageQueryQuestionResult.setPageSize(pageSize);
-        pageQueryQuestionResult.setPageNo(pageNumber);
-        pageQueryQuestionResult.setQuestions(queryResult);
+        return queryResult;
     }
 
     @Override
@@ -255,22 +282,28 @@ public class EsQuestionServiceImpl implements EsQuestionService {
             allQuestions.addAll(allPages.getContent());
             pageQueryQuestionResult.setTotalCount(allPages.getTotalElements());
         }else {
-            List<HighlightField> fields = new ArrayList<>();
-            fields.add(new HighlightField("stem_block.text"));
-            fields.add(new HighlightField("explanation_block.explanation.text"));
-            fields.add(new HighlightField("answer_block.text"));
+            List<HighlightField> fields = List.of(
+                    new HighlightField("stem_block.text")
+                    , new HighlightField("explanation_block.explanation.text")
+                    , new HighlightField("answer_block.text")
+            );
+
+            HighlightParameters highlightParams = new HighlightParameters.HighlightParametersBuilder()
+                    .withPreTags("<em style=\"color: red\">")
+                    .withPostTags("</em>")
+                    .withFragmentSize(0)          // 0 = 关闭分片
+                    .withNumberOfFragments(0)     // 0 = 只返回一个片段，即完整字段
+                    .withType("unified")          // 推荐 unified，高亮质量更好
+                    .build();
 
             NativeQuery query = NativeQuery.builder()
-                    .withQuery(q -> q
-                            .multiMatch(mm -> mm
-                                    .query(keyword)
-                                    .fields("stem_block.text"
-                                            , "explanation_block.explanation.text"
-                                            , "answer_block.text")
-                            )
-                    ).withHighlightQuery(new HighlightQuery
-                            (new Highlight(new HighlightParameters.HighlightParametersBuilder().withPreTags("<em style=\"color: red\">")
-                                    .withPostTags("</em>").build() , fields), Question.class))
+                    .withQuery(q -> q.multiMatch(mm -> mm
+                            .query(keyword)
+                            .fields("stem_block.text",
+                                    "explanation_block.explanation.text",
+                                    "answer_block.text")))
+                    .withHighlightQuery(new HighlightQuery(
+                            new Highlight(highlightParams, fields), Question.class))
                     .withPageable(pageable)
                     .build();
 
@@ -278,10 +311,15 @@ public class EsQuestionServiceImpl implements EsQuestionService {
 
             allQuestions.addAll(searchHits.getSearchHits().stream()
                     .map(searchHit -> {
+//                        System.out.println(searchHit.getContent().getExplanationBlock().getExplanation().getText());
+//                        System.out.println(searchHit.getContent().getExplanationBlock().getExplanation().getText());
                         List<String> stemText = searchHit.getHighlightField("stem_block.text");
-                        //System.out.println(searchHit.getContent().getStemBlock().getText());
+//                        System.out.println(searchHit.getContent().getStemBlock().getText());
                         List<String> explanationText = searchHit.getHighlightField("explanation_block.explanation.text");
                         List<String> answerText = searchHit.getHighlightField("answer_block.text");
+                        System.out.println(STR."""
+                                \{String.join("", explanationText)}
+                                """);
                         Question q = searchHit.getContent();
                         if(!stemText.isEmpty()) {
                             StemBlock stemBlock = q.getStemBlock();
@@ -311,11 +349,249 @@ public class EsQuestionServiceImpl implements EsQuestionService {
             }
         }
 
-        queryQuestionsByIds(pageNumber, pageSize, allQuestions, pageQueryQuestionResult);
+        if(allQuestions.isEmpty()){
+            return new PageQueryQuestionResult();
+        }
+
+        List<Map<String, String>> queryResult = queryQuestionsByIds(allQuestions);
+        pageQueryQuestionResult.setPageSize(pageSize);
+        pageQueryQuestionResult.setPageNo(pageNumber);
+        pageQueryQuestionResult.setQuestions(queryResult);
         return pageQueryQuestionResult;
     }
 
-    private StringBuilder insertTagsIntoResult(Question question,
+    @Override
+    public File generateDocx(List<Long> ids) {
+        // 1. 查询试题列表
+        List<Question> questions = esQuestionRepository.findByQuestionIdIn(ids);
+        List<Map<String, String>> allQuestions = queryQuestionsByIds(questions);
+        XWPFDocument doc = new XWPFDocument();
+
+        for (Map<String, String> q : allQuestions) {
+            String stem = q.get("stem");          // 示例：含 $$...$$ 的题干
+            List<Object> parts = null;  // 见下方改版 splitContent
+            try {
+                parts = splitContent(stem);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+            XWPFParagraph para = doc.createParagraph();
+
+            for (Object part : parts) {
+                if (part instanceof String) {           // 纯文本
+                    XWPFRun run = para.createRun();
+                    run.setText((String) part);
+                } else if (part instanceof BufferedImage) { // 普通图片
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    try {
+                        ImageIO.write((BufferedImage) part, "png", baos);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    XWPFRun run = para.createRun();
+                    try {
+                        run.addPicture(new ByteArrayInputStream(baos.toByteArray()),
+                                XWPFDocument.PICTURE_TYPE_PNG, "img", Units.toEMU(100), Units.toEMU(40));
+                    } catch (InvalidFormatException e) {
+                        throw new RuntimeException(e);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                } else if (part instanceof OmmlWrapper) {
+                    // OMML 公式
+                    try {
+                        appendOmmlToParagraph(para, ((OmmlWrapper) part).getOmml());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+            doc.createParagraph(); // 空行分隔
+        }
+
+        File out = null;
+        try {
+            out = File.createTempFile("export-", ".docx");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        try (FileOutputStream fos = new FileOutputStream(out)) {
+            doc.write(fos);
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return out;
+    }
+
+    @Override
+    public File generatePdf(List<Long> ids) {
+        return null;
+    }
+
+    @Override
+    public PageQueryQuestionResult searchQuestionByCombination(QuestionSearchRequest questionSearchRequest) {
+        Pageable pageable = PageRequest.of(
+                questionSearchRequest.getPageNumber().intValue(),
+                questionSearchRequest.getPageSize().intValue());
+
+        // === 高亮公共设置（如已有） ===
+        HighlightParameters hp = new HighlightParameters
+                .HighlightParametersBuilder()
+                .withPreTags("<em style='color:red'>")
+                .withPostTags("</em>")
+                .withFragmentSize(0)
+                .withNumberOfFragments(0)
+                .build();
+
+        List<HighlightField> hlFields = List.of(
+                new HighlightField("stem_block.text"),
+                new HighlightField("explanation_block.explanation.text"),
+                new HighlightField("answer_block.text")
+        );
+
+        // === 1. 构造 bool 查询 ===
+        NativeQueryBuilder builder = NativeQuery.builder();
+
+        builder.withQuery(q -> q.bool(bool -> {
+
+            // 关键词（multiMatch）—— 可为空
+            if (StringUtils.isNotBlank(questionSearchRequest.getKeyword())) {
+                bool.must(m -> m.multiMatch(mm -> mm
+                        .query(questionSearchRequest.getKeyword())
+                        .fields(
+                                "stem_block.text",
+                                "explanation_block.explanation.text",
+                                "answer_block.text")));
+            }else{
+                bool.filter(f -> f.matchAll(m -> m));
+            }
+
+            // 知识点 id —— 可为空
+            if (questionSearchRequest.getKnowledgePointId() != null) {
+                bool.filter(f -> f.term(t -> t
+                        .field("knowledge_point_ids")
+                        .value(questionSearchRequest.getKnowledgePointId()))
+                );
+            }
+
+            // 年级 —— 必填
+            if(!StringUtils.equals(questionSearchRequest.getGrade(), "all")) {
+                bool.filter(f -> f.term(t -> t
+                        .field("grade")
+                        .value(questionSearchRequest.getGrade())));
+            }
+            // 题型 —— 必填
+
+            if(!StringUtils.equals(questionSearchRequest.getQuestionType(), "all")) {
+                bool.filter(f -> f.term(t -> t
+                        .field("simple_question_type")
+                        .value(questionSearchRequest.getQuestionType())));
+            }
+            /* 难度区间（double 0-1） */
+            bool.filter(f -> f.range(buildDifficultyRange(questionSearchRequest.getDifficulty())));
+
+            return bool;
+        }));
+
+        /* 分页 & 高亮（如需） */
+        builder.withPageable(pageable)
+                .withTrackTotalHits(true);
+
+        if(StringUtils.isNotBlank(questionSearchRequest.getKeyword())) {
+            builder.withHighlightQuery(new HighlightQuery(
+                    new Highlight(hp, hlFields), Question.class));
+        }
+
+        NativeQuery query =  builder.build();
+
+        List<Question> allQuestions = new ArrayList<>();
+
+        SearchHits<Question> allPages = elasticsearchTemplate.search(query, Question.class);
+
+        PageQueryQuestionResult pageQueryQuestionResult = new PageQueryQuestionResult();
+
+
+        allQuestions.addAll(allPages.stream().map(SearchHit::getContent).toList());
+
+        System.out.println(allQuestions.size());
+
+        if(allQuestions.isEmpty()){
+            return new PageQueryQuestionResult();
+        }
+
+        List<Map<String, String>> queryResult = queryQuestionsByIds(allQuestions);
+
+        pageQueryQuestionResult.setQuestions(queryResult);
+
+        pageQueryQuestionResult.setTotalCount(allPages.getTotalHits());
+
+        System.out.println(pageQueryQuestionResult);
+
+        return pageQueryQuestionResult;
+    }
+
+    private RangeQuery buildDifficultyRange(String diffKey) {
+        return RangeQuery.of(rq -> rq.number(n -> {
+            n.field("difficulty");
+            return switch (diffKey) {
+                case "difficult"   -> n.from(0.0).to(0.5);
+                case "relatively-difficult" -> n.from(0.5).to(0.65);
+                case "medium" -> n.from(0.65).to(0.8);
+                case "simple"   -> n.from(0.8).to(0.9);
+                case "easy"   -> n.from(0.9).to(1.0);
+                case "all"    -> n.from(0.0).to(1.0);
+                default       -> throw new IllegalArgumentException("unknown difficulty enum");
+            };
+        }));
+    }
+
+    public static class OmmlWrapper {        // 小包装，便于类型区分
+        private final String omml;
+        OmmlWrapper(String omml) { this.omml = omml; }
+        String getOmml() { return omml; }
+    }
+
+    public List<Object> splitContent(String htmlLike) {
+        this.htmlLike = htmlLike;
+        List<Object> list = new ArrayList<>();
+        Pattern p = Pattern.compile("(\\$\\$[\\s\\S]*?\\$\\$)|(<img.*?src=[\"'](.*?)[\"'].*?>)");
+        Matcher m = p.matcher(htmlLike);
+        int last = 0;
+        while (m.find()) {
+            if (last < m.start()) list.add(htmlLike.substring(last, m.start())); // 文本
+
+            if (m.group(1) != null) {                 // LaTeX 公式
+                String latex = m.group(1).replace("$$", "$");
+                String omml = Latex_Word.latexToWord(latex);   // ← 关键替换
+                list.add(new OmmlWrapper(omml));
+            } else if (m.group(2) != null) {          // 普通图片
+                BufferedImage img = null;
+                try {
+                    img = ImageIO.read(new URL(m.group(3)));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                list.add(img);
+            }
+            last = m.end();
+        }
+        if (last < htmlLike.length()) list.add(htmlLike.substring(last));
+        return list;
+    }
+
+    public static void appendOmmlToParagraph(XWPFParagraph para, String omml) throws Exception {
+        // 1. 解析 OMML 字符串
+
+        String ommlXml = Latex_Word.latexToWord(omml);
+        XmlObject xmlObj = XmlObject.Factory.parse(ommlXml);
+        // 2. 将其导入到段落底层的 CTP
+        para.getCTP().addNewOMathPara().set(xmlObj);
+    }
+
+    public StringBuilder insertTagsIntoResult(Question question,
                                                boolean isSubQuestion,
                                                HashMap<String, String> questionMap,
                                                Map<Long, ComplexityType> complexityTypeMap,
@@ -363,7 +639,7 @@ public class EsQuestionServiceImpl implements EsQuestionService {
         return stemText;
     }
 
-    private void insertBlockTextIntoResult(Question question, HashMap<String, String> questionMap) {
+    public void insertBlockTextIntoResult(Question question, HashMap<String, String> questionMap) {
         AnswerBlock answerBlock = question.getAnswerBlock();
         StringBuilder answerText = new StringBuilder();
         if (answerBlock != null) {
@@ -399,7 +675,7 @@ public class EsQuestionServiceImpl implements EsQuestionService {
         );
     }
 
-    private void insertImageUrlIntoText(QuestionBlock block, StringBuilder text) {
+    public void insertImageUrlIntoText(QuestionBlock block, StringBuilder text) {
         if(text.isEmpty()){
             return;
         }

@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -37,22 +38,22 @@ public class MongoMongoQuestionServiceImpl implements MongoQuestionService {
 
     static {
         ObjectMapper objectMapper = new ObjectMapper();
-        String path = "resources/KnowledgeTree/xkb_node_to_id.json";
-
-
-        try {
-            nameToId = objectMapper.readValue(
-                   new File(path),
-                   new TypeReference<Map<String, String>>() {}
-           );
+        String path = "KnowledgeTree/xkb_node_to_id.json";
+        try (
+                InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(path)
+        ) {
+            if (is == null) {
+                throw new RuntimeException("字典文件找不到：" + path + "，请确认已放到resources目录下");
+            }
+            nameToId = objectMapper.readValue(is, new TypeReference<Map<String, String>>() {});
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
         idToName = nameToId.entrySet()
                 .stream()
                 .collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
     }
+
 
     @Resource
     private ObjectMapper objectMapper;

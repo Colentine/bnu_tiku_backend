@@ -1,6 +1,7 @@
 package com.ht.bnu_tiku_backend.controller;
 
-import com.ht.bnu_tiku_backend.mongodb.model.KnowledgePoint;
+import com.ht.bnu_tiku_backend.elasticsearch.model.KnowledgePoint;
+import com.ht.bnu_tiku_backend.elasticsearch.service.impl.EsKnowledgePointServiceImpl;
 import com.ht.bnu_tiku_backend.mongodb.service.impl.MongoKnowledgePointServiceImpl;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,9 +17,18 @@ public class KnowledgePointController {
     @Resource
     private MongoKnowledgePointServiceImpl mongoKnowledgePointService;
 
+    @Resource
+    private EsKnowledgePointServiceImpl esKnowledgePointService;
+
+//    @GetMapping("/search/{name}")
+//    public List<KnowledgePoint> autoCompleteSearch(@PathVariable("name") String name) {
+//        System.out.println(name);
+//        return mongoKnowledgePointService.autoCompleteSearch(name);
+//    }
+
     @GetMapping("/search/{name}")
     public List<KnowledgePoint> autoCompleteSearch(@PathVariable("name") String name) {
         System.out.println(name);
-        return mongoKnowledgePointService.autoCompleteSearch(name);
+        return esKnowledgePointService.autoCompleteSearch(name);
     }
 }

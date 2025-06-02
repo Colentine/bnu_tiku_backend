@@ -35,7 +35,7 @@ public class MongoKnowledgePointServiceImplTest {
     public void insertKnowledgePoint() throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
 
-        String path = "resources/KnowledgeTree/xkb_knowledge_tree.json";
+        String path = "KnowledgeTree/xkb_knowledge_tree.json";
 
         objectMapper.readValue(new File(path), new TypeReference<List<KnowledgePoint>>() {
         }).forEach(knowledgePoint -> {

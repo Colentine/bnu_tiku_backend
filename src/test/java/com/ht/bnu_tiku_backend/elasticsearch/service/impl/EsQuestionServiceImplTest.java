@@ -28,6 +28,8 @@ import com.ht.bnu_tiku_backend.mongodb.model.AnswerBlock;
 
 import com.ht.bnu_tiku_backend.elasticsearch.model.Question;
 import com.ht.bnu_tiku_backend.service.QuestionService;
+import com.ht.bnu_tiku_backend.utils.request.QuestionSearchRequest;
+import com.latextoword.Latex_Word;
 import jakarta.annotation.Resource;
 import org.junit.Test;
 import org.junit.platform.commons.util.StringUtils;
@@ -61,6 +63,8 @@ public class EsQuestionServiceImplTest {
 
     @Resource
     private ComplexityTypeMapper complexityTypeMapper;
+    @Autowired
+    private EsQuestionServiceImpl esQuestionService;
 
     @Test
     public void insertSampleQuestionTest() {
@@ -102,7 +106,7 @@ public class EsQuestionServiceImplTest {
                         mysqlQuestion.get("knowledge_point_list")
                         , new TypeReference<List<Long>>() {}
                 ));
-            } catch (JsonProcessingException e) {
+            } catch (IOException e) {
                 throw new RuntimeException(e);
             }
             gradeQueryWrapper.eq("name", mysqlQuestion.get("grade"));
@@ -145,7 +149,7 @@ public class EsQuestionServiceImplTest {
                                 subQuestionString,
                                 new TypeReference<>() {
                                 }));
-                    } catch (JsonProcessingException e) {
+                    } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
                 }
@@ -188,5 +192,63 @@ public class EsQuestionServiceImplTest {
     @Test
     public void queryQuestionsByKeyword() throws IOException {
         System.out.println(esQuestionServiceImpl.queryQuestionsByKeyword("数", 1297L, 10L));
+    }
+
+    @Test
+    public void generateDocx() {
+        esQuestionService.generateDocx(List.of(1L,2L));
+    }
+
+    @Test
+    public void generatePdf() {
+    }
+
+    @Test
+    public void latexToMathml(){
+        String latexStr="$$2+x$$";
+        String omml= Latex_Word.latexToWord(latexStr);
+        System.out.println(omml);
+    }
+
+    @Test
+    public void splitContent() {
+        List<Object> objects = esQuestionService.splitContent("解析：<br/>(1) 解：点$$A$$，$$B$$，$$C$$即为如图所示．\n" +
+                "<img alt=\"\" height=\"51\" src=\"https://tiku-pro-cdn.speiyou.com/wxtiku/imgFile/75db5cde9ba63ba28454fac8a784db7c.png\" width=\"493\"/>\n" +
+                "(2) 解：$$5-\\left( -2.5 \\right)=7.5$$(千米)．\n" +
+                "故超市和姥爷家相距$$7.5$$千米．\n" +
+                "(3) 解：$$\\left( 5+2.5+10+2.5 \\right)\\times 0.08=1.6$$(升)．\n" +
+                "故小轿车的耗油量是$$1.6$$升．<br/>");
+        System.out.println(objects);
+    }
+
+    @Test
+    public void appendOmmlToParagraph() {
+    }
+
+    @Test
+    public void insertTagsIntoResult() {
+    }
+
+    @Test
+    public void insertBlockTextIntoResult() {
+    }
+
+    @Test
+    public void insertImageUrlIntoText() {
+    }
+
+    @Test
+    public void searchQuestionByCombination() {
+        QuestionSearchRequest questionSearchRequest = new QuestionSearchRequest();
+        questionSearchRequest.setKnowledgePointId(1238L);
+        questionSearchRequest.setKeyword("");
+        questionSearchRequest.setDifficulty("difficult");
+        questionSearchRequest.setGrade("all");
+        questionSearchRequest.setQuestionType("all");
+        questionSearchRequest.setPageNumber(0L);
+        questionSearchRequest.setPageSize(10L);
+
+        esQuestionService.searchQuestionByCombination(questionSearchRequest);
+
     }
 }

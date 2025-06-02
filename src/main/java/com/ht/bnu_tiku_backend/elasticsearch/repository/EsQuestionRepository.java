@@ -9,6 +9,10 @@ import java.util.List;
 
 public interface EsQuestionRepository extends ElasticsearchRepository<Question, Long> {
     List<Question> findByKnowledgePointIdsIn(List<Long> knowledgePointId);
+
     Page<Question> findByKnowledgePointIdsIn(List<Long> knowledgePointId, Pageable pageable);
+
     List<Question> findByParentId(Long parentId);
+
+    List<Question> findByQuestionIdIn(List<Long> questionIds);
 }
