@@ -470,25 +470,26 @@ public class EsQuestionServiceImpl implements EsQuestionService {
             }
 
             // 知识点 id —— 可为空
-            if (questionSearchRequest.getKnowledgePointId() != null) {
+            if (StringUtils.isNotBlank(questionSearchRequest.getKnowledgePointName())
+                    && !StringUtils.equals(questionSearchRequest.getKnowledgePointName(), "beforeMount")) {
                 bool.filter(f -> f.term(t -> t
                         .field("knowledge_point_ids")
-                        .value(questionSearchRequest.getKnowledgePointId()))
+                        .value(nameToId.get(questionSearchRequest.getKnowledgePointName())))
                 );
             }
 
             // 年级 —— 必填
-            if(!StringUtils.equals(questionSearchRequest.getGrade(), "all")) {
+            if(questionSearchRequest.getGradeId() != -1) {
                 bool.filter(f -> f.term(t -> t
-                        .field("grade")
-                        .value(questionSearchRequest.getGrade())));
+                        .field("grade_id")
+                        .value(questionSearchRequest.getGradeId())));
             }
             // 题型 —— 必填
 
-            if(!StringUtils.equals(questionSearchRequest.getQuestionType(), "all")) {
+            if(questionSearchRequest.getSimpleQuestionType() != -1) {
                 bool.filter(f -> f.term(t -> t
                         .field("simple_question_type")
-                        .value(questionSearchRequest.getQuestionType())));
+                        .value(questionSearchRequest.getSimpleQuestionType())));
             }
             /* 难度区间（double 0-1） */
             bool.filter(f -> f.range(buildDifficultyRange(questionSearchRequest.getDifficulty())));
@@ -537,9 +538,9 @@ public class EsQuestionServiceImpl implements EsQuestionService {
         return RangeQuery.of(rq -> rq.number(n -> {
             n.field("difficulty");
             return switch (diffKey) {
-                case "difficult"   -> n.from(0.0).to(0.5);
-                case "relatively-difficult" -> n.from(0.5).to(0.65);
-                case "medium" -> n.from(0.65).to(0.8);
+                case "difficult"   -> n.from(0.0).to(0.45);
+                case "relatively-difficult" -> n.from(0.45).to(0.6);
+                case "medium" -> n.from(0.6).to(0.8);
                 case "simple"   -> n.from(0.8).to(0.9);
                 case "easy"   -> n.from(0.9).to(1.0);
                 case "all"    -> n.from(0.0).to(1.0);

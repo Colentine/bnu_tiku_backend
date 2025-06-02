@@ -240,11 +240,11 @@ public class EsQuestionServiceImplTest {
     @Test
     public void searchQuestionByCombination() {
         QuestionSearchRequest questionSearchRequest = new QuestionSearchRequest();
-        questionSearchRequest.setKnowledgePointId(1238L);
+        questionSearchRequest.setKnowledgePointName("");
         questionSearchRequest.setKeyword("");
         questionSearchRequest.setDifficulty("difficult");
-        questionSearchRequest.setGrade("all");
-        questionSearchRequest.setQuestionType("all");
+        questionSearchRequest.setGradeId(-1);
+        questionSearchRequest.setSimpleQuestionType(-1);
         questionSearchRequest.setPageNumber(0L);
         questionSearchRequest.setPageSize(10L);
 

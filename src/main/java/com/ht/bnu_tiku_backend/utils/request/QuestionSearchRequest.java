@@ -4,15 +4,15 @@ import lombok.Data;
 
 @Data
 public class QuestionSearchRequest {
-    Long knowledgePointId;
+    String knowledgePointName;
 
     String keyword;
 
     String difficulty;
 
-    String grade;
+    Integer gradeId;
 
-    String questionType;
+    Integer simpleQuestionType;
 
     Long pageNumber;
 

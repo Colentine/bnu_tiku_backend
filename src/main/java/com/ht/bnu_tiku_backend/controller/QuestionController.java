@@ -92,9 +92,10 @@ public class QuestionController {
                 pageSize);
     }
 
-    @GetMapping("/search/kp/combination")
+    @PostMapping("/search/combination")
     public PageQueryQuestionResult searchQuestionByCombination(@RequestBody QuestionSearchRequest questionSearchRequest)
     {
+        System.out.println(questionSearchRequest);
         return esQuestionService.searchQuestionByCombination(questionSearchRequest);
     }
 
