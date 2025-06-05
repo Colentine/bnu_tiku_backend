@@ -2,7 +2,6 @@ package com.ht.bnu_tiku_backend.elasticsearch.service.impl;
 
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.query_dsl.RangeQuery;
-import co.elastic.clients.json.JsonData;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -20,30 +19,27 @@ import com.ht.bnu_tiku_backend.model.domain.Grade;
 import com.ht.bnu_tiku_backend.model.domain.Source;
 import com.ht.bnu_tiku_backend.mongodb.model.*;
 import com.ht.bnu_tiku_backend.mongodb.model.Image;
-import com.ht.bnu_tiku_backend.mongodb.repository.QuestionRepository;
 import com.ht.bnu_tiku_backend.utils.page.PageQueryQuestionResult;
 import com.ht.bnu_tiku_backend.utils.request.QuestionSearchRequest;
 import com.latextoword.Latex_Word;
 import jakarta.annotation.Resource;
+import lombok.Data;
+import org.apache.batik.transcoder.TranscoderInput;
+import org.apache.batik.transcoder.TranscoderOutput;
+import org.apache.batik.transcoder.image.PNGTranscoder;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.apache.poi.openxml4j.opc.OPCPackage;
+import org.apache.poi.openxml4j.opc.PackagePart;
 import org.apache.poi.util.Units;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
 import org.apache.xmlbeans.XmlObject;
-import org.docx4j.XmlUtils;
-import org.docx4j.math.CTOMathPara;
-import org.docx4j.math.ObjectFactory;
-import org.docx4j.model.structure.PageSizePaper;
-import org.docx4j.openpackaging.exceptions.Docx4JException;
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
-import org.docx4j.openpackaging.parts.WordprocessingML.MainDocumentPart;
-import org.docx4j.wml.Document;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.client.elc.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
@@ -56,21 +52,23 @@ import org.springframework.data.elasticsearch.core.query.highlight.HighlightPara
 import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URL;
 import java.util.*;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import static com.ht.bnu_tiku_backend.mongodb.service.impl.MongoMongoQuestionServiceImpl.*;
 
 @Service
 public class EsQuestionServiceImpl implements EsQuestionService {
     public static final Map<String, String> nameToId;
     public static final Map<String, String> idToName;
+    private static final String NS =
+            "http://schemas.openxmlformats.org/officeDocument/2006/math";
+    String NS_W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
 
     static {
         ObjectMapper objectMapper = new ObjectMapper();
@@ -272,11 +270,16 @@ public class EsQuestionServiceImpl implements EsQuestionService {
     }
 
     @Override
+    public File generatePdf(List<Long> ids) {
+        return null;
+    }
+
+    @Override
     public PageQueryQuestionResult queryQuestionsByKeyword(String keyword, Long pageNumber, Long pageSize) throws IOException {
         PageQueryQuestionResult pageQueryQuestionResult = new PageQueryQuestionResult();
-
         Pageable pageable = PageRequest.of(Math.toIntExact(pageNumber-1), Math.toIntExact(pageSize));
         List<Question> allQuestions = new ArrayList<>();
+
         if(keyword.isBlank()){
             Page<Question> allPages = esQuestionRepository.findAll(pageable);
             allQuestions.addAll(allPages.getContent());
@@ -317,9 +320,9 @@ public class EsQuestionServiceImpl implements EsQuestionService {
 //                        System.out.println(searchHit.getContent().getStemBlock().getText());
                         List<String> explanationText = searchHit.getHighlightField("explanation_block.explanation.text");
                         List<String> answerText = searchHit.getHighlightField("answer_block.text");
-                        System.out.println(STR."""
-                                \{String.join("", explanationText)}
-                                """);
+//                        System.out.println(STR."""
+//                                \{String.join("", explanationText)}
+//                                """);
                         Question q = searchHit.getContent();
                         if(!stemText.isEmpty()) {
                             StemBlock stemBlock = q.getStemBlock();
@@ -333,7 +336,6 @@ public class EsQuestionServiceImpl implements EsQuestionService {
                             explanationBlock.setExplanation(explanation);
                             q.setExplanationBlock(explanationBlock);
                         }
-
                         if(!answerText.isEmpty()) {
                             AnswerBlock answerBlock = q.getAnswerBlock();
                             answerBlock.setText(String.join("", answerText));
@@ -344,9 +346,6 @@ public class EsQuestionServiceImpl implements EsQuestionService {
                     .toList());
             //System.out.println(allQuestions.getFirst());
             pageQueryQuestionResult.setTotalCount(searchHits.getTotalHits());
-            if (allQuestions.isEmpty()) {
-                return new PageQueryQuestionResult();
-            }
         }
 
         if(allQuestions.isEmpty()){
@@ -366,51 +365,98 @@ public class EsQuestionServiceImpl implements EsQuestionService {
         List<Question> questions = esQuestionRepository.findByQuestionIdIn(ids);
         List<Map<String, String>> allQuestions = queryQuestionsByIds(questions);
         XWPFDocument doc = new XWPFDocument();
-
+        Integer i = 1;
         for (Map<String, String> q : allQuestions) {
-            String stem = q.get("stem");          // 示例：含 $$...$$ 的题干
-            List<Object> parts = null;  // 见下方改版 splitContent
-            try {
-                parts = splitContent(stem);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-
+            String stem = q.get("stem");
+            List<Object> parts = splitContent(stem);      // 富文本拆分
+//            System.out.println(parts);
             XWPFParagraph para = doc.createParagraph();
+            StringBuilder ommlBuilder = new StringBuilder();
+            // ① 起一个 <m:oMathPara> 容器（带 namespace）
 
+            final boolean[] open = {false};                         // 追踪 MathPara 是否已经打开
+
+            Consumer<Void> ensureOpen = v -> {
+                if (!open[0]) {
+//                    ommlBuilder.append("<m:oMathPara ")
+//                            .append("xmlns:m=\"").append(NS).append("\" ")
+//                            .append("xmlns:w=\"").append(NS_W).append("\">");
+                    open[0] = true;
+                }
+            };
+            XWPFRun runQuestionId = para.createRun();
+            runQuestionId.setText("题【" + i + "】 ");
+            runQuestionId.setFontSize(12);
+            runQuestionId.setFontFamily("宋体");
+            i = i + 1;
             for (Object part : parts) {
-                if (part instanceof String) {           // 纯文本
+
+                /* ---------- 普通文字 ---------- */
+                if (part instanceof String txt) {
+                    // flush 之前的公式段
+                    if (open[0]) {
+                        flushOmmlToParagraph(para, ommlBuilder);
+                        ommlBuilder.setLength(0);
+                        open[0] = false;
+                    }
                     XWPFRun run = para.createRun();
-                    run.setText((String) part);
-                } else if (part instanceof BufferedImage) { // 普通图片
+                    run.setText(txt);
+                    run.setFontFamily("宋体");
+                    run.setFontSize(12);
+                    continue;
+                }
+
+                /* ---------- LaTeX 公式 ---------- */
+                if (part instanceof OmmlWrapper ow) {
+//                    ensureOpen.accept(null);                 // ① 先保证 <m:oMathPara> 已开启
+                    String omml = StringEscapeUtils.unescapeXml(ow.getOmml())
+                            .replaceAll("<m:oMathPara[^>]*>|</m:oMathPara>", "");
+                    if (!omml.contains("xmlns:m"))
+                        omml = omml.replaceFirst("<m:oMath",
+                                "<m:oMath xmlns:m=\"" + NS + "\" xmlns:w=\"" + NS_W + "\"");
+                    ommlBuilder.append(omml);
+                    continue;
+                }
+
+                /* ---------- 普通图片 ---------- */
+                if (part instanceof ImageWrapper iw) {
+//                    flushOmmlToParagraph(para, ommlBuilder);
+                    if (open[0]) {                              // 把公式段落先落地
+                        flushOmmlToParagraph(para, ommlBuilder);
+                        ommlBuilder.setLength(0);
+                        open[0] = false;
+                    }
+                    // 插图逻辑保持
+                    BufferedImage img = iw.getImg();
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
                     try {
-                        ImageIO.write((BufferedImage) part, "png", baos);
+                        ImageIO.write(img, "png", baos);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
-                    XWPFRun run = para.createRun();
                     try {
-                        run.addPicture(new ByteArrayInputStream(baos.toByteArray()),
-                                XWPFDocument.PICTURE_TYPE_PNG, "img", Units.toEMU(100), Units.toEMU(40));
-                    } catch (InvalidFormatException e) {
-                        throw new RuntimeException(e);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                } else if (part instanceof OmmlWrapper) {
-                    // OMML 公式
-                    try {
-                        appendOmmlToParagraph(para, ((OmmlWrapper) part).getOmml());
-                    } catch (Exception e) {
+                        para.createRun().addPicture(
+                                new ByteArrayInputStream(baos.toByteArray()),
+                                XWPFDocument.PICTURE_TYPE_PNG,
+                                "img",
+                                Units.toEMU(iw.getWidth()),
+                                Units.toEMU(iw.getHeight()));
+                    } catch (InvalidFormatException | IOException e) {
                         throw new RuntimeException(e);
                     }
                 }
             }
-            doc.createParagraph(); // 空行分隔
+
+            /* 循环完后别忘 flush */
+            if (open[0]) {
+                flushOmmlToParagraph(para, ommlBuilder);
+            }
+
+            // ③ 空行分段
+            doc.createParagraph();// 空行分隔
         }
 
-        File out = null;
+        File out;
         try {
             out = File.createTempFile("export-", ".docx");
         } catch (IOException e) {
@@ -418,23 +464,114 @@ public class EsQuestionServiceImpl implements EsQuestionService {
         }
         try (FileOutputStream fos = new FileOutputStream(out)) {
             doc.write(fos);
-        } catch (FileNotFoundException e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+        try {
+            doc.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         return out;
     }
+    private static void flushOmmlToParagraph(XWPFParagraph para, StringBuilder sb) {
+//        System.out.println(sb.toString());
+        if (sb.isEmpty()) return;
+//        if (!sb.toString().endsWith("</m:oMathPara>"))
+//            sb.append("</m:oMathPara>");
 
-    @Override
-    public File generatePdf(List<Long> ids) {
-        return null;
+        try {
+            XmlObject mathPara = XmlObject.Factory.parse(sb.toString());
+//            CTOMathPara mathPara = CTOMathPara.Factory.parse(sb.toString());
+            para.getCTP().addNewOMathPara().set(mathPara);
+        } catch (Exception e) {
+            throw new RuntimeException("OMML 解析失败", e);
+        }
+    }
+
+    public List<Object> splitContent(String htmlLike) {
+        this.htmlLike = htmlLike;
+        List<Object> list = new ArrayList<>();
+        Pattern p = Pattern.compile(
+                "(\\$\\$[\\s\\S]*?\\$\\$)"                    // Latex 公式
+                        + "|(<img[^>]*?src=[\"']([^\"']+)[\"'][^>]*?>)", // <img … src="URL" …>
+                Pattern.CASE_INSENSITIVE);
+        Matcher m = p.matcher(htmlLike);;
+        int last = 0;
+        while (m.find()) {
+            if (last < m.start()) list.add(htmlLike.substring(last, m.start())); // 文本
+
+            if (m.group(1) != null) {                 // LaTeX 公式
+                String latex = m.group(1).replace("$$", "$");
+                String omml = Latex_Word.latexToWord(latex);   // ← 关键替换
+                list.add(new OmmlWrapper(omml));
+            } else if (m.group(2) != null) {          // 普通图片
+                BufferedImage img = null;
+                String imgUrl = m.group(3);
+                String imgTag = m.group(2);// src
+//                System.out.println(imgTag);
+                Pattern w  = Pattern.compile(
+                        "width\\s*=\\s*[\"']\\s*(\\d+)\\s*(?:px)?\\s*[\"']",
+                        Pattern.CASE_INSENSITIVE);
+
+                Pattern h = Pattern.compile(
+                        "height\\s*=\\s*[\"']\\s*(\\d+)\\s*(?:px)?\\s*[\"']",
+                        Pattern.CASE_INSENSITIVE);
+                // 提取显式宽高（像素）
+                Matcher mw = w.matcher(imgTag);
+                Matcher mh = h.matcher(imgTag);
+                Integer wPx = mw.find() ? Integer.valueOf(mw.group(1)) : null;
+                Integer hPx = mh.find() ? Integer.valueOf(mh.group(1)) : null;
+
+                try {
+                    if (imgUrl.endsWith(".svg")) {
+                        img = convertSvgToPng(imgUrl);
+                    } else {
+                        img = ImageIO.read(new URL(imgUrl));
+                    }
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+
+                if ((wPx == null) && (hPx != null)) {
+                    wPx = hPx;
+                }else if ((wPx != null) && (hPx == null)) {
+                    hPx = wPx;
+                }else if (wPx == null) {
+                    wPx = img.getWidth();
+                    hPx = img.getHeight();
+                }
+
+                ImageWrapper imageWrapper = new ImageWrapper(img, wPx, hPx);
+                list.add(imageWrapper);
+            }
+            last = m.end();
+        }
+        if (last < htmlLike.length()) list.add(htmlLike.substring(last));
+        return list;
+    }
+    public static BufferedImage convertSvgToPng(String svgUrl) throws Exception {
+        URL url = new URL(svgUrl);
+        InputStream inputStream = url.openStream();
+        TranscoderInput input = new TranscoderInput(inputStream);
+        //  PNG 转化对象
+        PNGTranscoder transcoder = new PNGTranscoder();
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        TranscoderOutput output = new TranscoderOutput(outputStream);
+        // svg转png
+        transcoder.transcode(input, output);
+        // png字节数据
+        byte[] pngBytes = outputStream.toByteArray();
+        BufferedImage image = ImageIO.read(new ByteArrayInputStream(pngBytes));
+        outputStream.close();
+        inputStream.close();
+        return image;
     }
 
     @Override
     public PageQueryQuestionResult searchQuestionByCombination(QuestionSearchRequest questionSearchRequest) {
         Pageable pageable = PageRequest.of(
-                questionSearchRequest.getPageNumber().intValue(),
+                questionSearchRequest.getPageNumber().intValue() - 1,
                 questionSearchRequest.getPageSize().intValue());
 
         // === 高亮公共设置（如已有） ===
@@ -514,10 +651,45 @@ public class EsQuestionServiceImpl implements EsQuestionService {
 
         PageQueryQuestionResult pageQueryQuestionResult = new PageQueryQuestionResult();
 
+        if(StringUtils.isNotBlank(questionSearchRequest.getKeyword())) {
+            allQuestions.addAll(allPages.getSearchHits().stream()
+                    .map(searchHit -> {
+//                        System.out.println(searchHit.getContent().getExplanationBlock().getExplanation().getText());
+//                        System.out.println(searchHit.getContent().getExplanationBlock().getExplanation().getText());
+                        List<String> stemText = searchHit.getHighlightField("stem_block.text");
+//                        System.out.println(searchHit.getContent().getStemBlock().getText());
+                        List<String> explanationText = searchHit.getHighlightField("explanation_block.explanation.text");
+                        List<String> answerText = searchHit.getHighlightField("answer_block.text");
+//                        System.out.println(STR."""
+//                                \{String.join("", explanationText)}
+//                                """);
+                        Question q = searchHit.getContent();
+                        if (!stemText.isEmpty()) {
+                            StemBlock stemBlock = q.getStemBlock();
+                            stemBlock.setText(String.join("", stemText));
+                            q.setStemBlock(stemBlock);
+                        }
+                        if (!explanationText.isEmpty()) {
+                            Explanation explanation = q.getExplanationBlock().getExplanation();
+                            explanation.setText(String.join("", explanationText));
+                            ExplanationBlock explanationBlock = q.getExplanationBlock();
+                            explanationBlock.setExplanation(explanation);
+                            q.setExplanationBlock(explanationBlock);
+                        }
 
-        allQuestions.addAll(allPages.stream().map(SearchHit::getContent).toList());
+                        if (!answerText.isEmpty()) {
+                            AnswerBlock answerBlock = q.getAnswerBlock();
+                            answerBlock.setText(String.join("", answerText));
+                            q.setAnswerBlock(answerBlock);
+                        }
+                        return q;
+                    })
+                    .toList());
+        }else{
+            allQuestions.addAll(allPages.stream().map(SearchHit::getContent).toList());
+        }
 
-        System.out.println(allQuestions.size());
+//        System.out.println(allQuestions.size());
 
         if(allQuestions.isEmpty()){
             return new PageQueryQuestionResult();
@@ -529,7 +701,7 @@ public class EsQuestionServiceImpl implements EsQuestionService {
 
         pageQueryQuestionResult.setTotalCount(allPages.getTotalHits());
 
-        System.out.println(pageQueryQuestionResult);
+//        System.out.println(pageQueryQuestionResult);
 
         return pageQueryQuestionResult;
     }
@@ -549,47 +721,38 @@ public class EsQuestionServiceImpl implements EsQuestionService {
         }));
     }
 
+    @Data
     public static class OmmlWrapper {        // 小包装，便于类型区分
         private final String omml;
         OmmlWrapper(String omml) { this.omml = omml; }
-        String getOmml() { return omml; }
     }
 
-    public List<Object> splitContent(String htmlLike) {
-        this.htmlLike = htmlLike;
-        List<Object> list = new ArrayList<>();
-        Pattern p = Pattern.compile("(\\$\\$[\\s\\S]*?\\$\\$)|(<img.*?src=[\"'](.*?)[\"'].*?>)");
-        Matcher m = p.matcher(htmlLike);
-        int last = 0;
-        while (m.find()) {
-            if (last < m.start()) list.add(htmlLike.substring(last, m.start())); // 文本
+    @Data
+    public static class ImageWrapper {        // 小包装，便于类型区分
+        private final BufferedImage img;
+        private final Integer width;
+        private final Integer height;
 
-            if (m.group(1) != null) {                 // LaTeX 公式
-                String latex = m.group(1).replace("$$", "$");
-                String omml = Latex_Word.latexToWord(latex);   // ← 关键替换
-                list.add(new OmmlWrapper(omml));
-            } else if (m.group(2) != null) {          // 普通图片
-                BufferedImage img = null;
-                try {
-                    img = ImageIO.read(new URL(m.group(3)));
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-                list.add(img);
-            }
-            last = m.end();
+        public ImageWrapper(BufferedImage img, Integer width, Integer height) {
+            this.img = img;
+            this.width = width;
+            this.height = height;
         }
-        if (last < htmlLike.length()) list.add(htmlLike.substring(last));
-        return list;
     }
 
     public static void appendOmmlToParagraph(XWPFParagraph para, String omml) throws Exception {
         // 1. 解析 OMML 字符串
 
         String ommlXml = Latex_Word.latexToWord(omml);
+        if (!ommlXml.contains("xmlns:m=")) {
+            ommlXml = ommlXml.replaceFirst(
+                    "<m:oMath(.*?)>",
+                    "<m:oMath$1 xmlns:m=\"http://schemas.openxmlformats.org/officeDocument/2006/math\">"
+            );
+        }
         XmlObject xmlObj = XmlObject.Factory.parse(ommlXml);
-        // 2. 将其导入到段落底层的 CTP
-        para.getCTP().addNewOMathPara().set(xmlObj);
+// ↓ 这里 cast 成 CTOMath
+        para.getCTP().addNewOMath().set(xmlObj);
     }
 
     public StringBuilder insertTagsIntoResult(Question question,

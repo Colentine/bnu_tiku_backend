@@ -107,6 +107,8 @@ public class QuestionController {
 
         File file;
         String mime;
+        System.out.println(format);
+        System.out.println(ids);
         if ("docx".equalsIgnoreCase(format)) {
             file = esQuestionService.generateDocx(ids);
             mime = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";

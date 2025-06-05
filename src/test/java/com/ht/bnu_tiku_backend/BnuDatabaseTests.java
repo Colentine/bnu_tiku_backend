@@ -2,6 +2,7 @@ package com.ht.bnu_tiku_backend;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -411,18 +412,18 @@ public class BnuDatabaseTests {
 
     @Test
     public void excelDataAutoInsertTest() throws IOException {
-        String path = "resources/KnowledgeTree/xkb_node_to_id.json";
-
+        String path = "KnowledgeTree/xkb_node_to_id.json";
+        InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(path);
         ObjectMapper objectMapper = new ObjectMapper();
 
         Map<String, String> knowledgeToId = objectMapper.readValue(
-                new File(path),
+                is,
                 new TypeReference<>() {
                 }
         );
         System.out.println(knowledgeToId.get("数"));
 
-        String filePath = "resources/data/middle_school_1121.xlsx";
+        String filePath = "data/tiku/middle_school_1121.xlsx";
         FileInputStream fis = new FileInputStream(filePath);
         Workbook workbook = new XSSFWorkbook(fis);
         Sheet sheet = workbook.getSheetAt(0);
@@ -450,7 +451,7 @@ public class BnuDatabaseTests {
                     .readValue(questionListString, new TypeReference<List<Map<String, String>>>() {
             }).stream().forEach(questionMap->{
                         int questionType = 0;
-                        int  simpleQuestionType = 0;
+                        int  simpleQuestionType = random.nextInt(0, 4);
                         long complexityTypeId =  random.nextInt(1, 10);
                         long gradeId =  random.nextInt(1, 6);
                         long sourceId = random.nextInt(1, 10);

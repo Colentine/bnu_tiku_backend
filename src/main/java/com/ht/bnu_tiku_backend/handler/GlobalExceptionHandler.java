@@ -3,9 +3,11 @@ package com.ht.bnu_tiku_backend.handler;
 import com.ht.bnu_tiku_backend.utils.Exception.NoLoginException;
 import com.ht.bnu_tiku_backend.utils.ResponseResult.Result;
 import com.ht.bnu_tiku_backend.utils.ResultCode;
+import io.swagger.v3.oas.annotations.Hidden;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+@Hidden
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 

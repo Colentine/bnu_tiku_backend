@@ -17,6 +17,9 @@ import com.ht.bnu_tiku_backend.mongodb.model.Explanation;
 import com.ht.bnu_tiku_backend.mongodb.model.ExplanationBlock;
 import com.google.common.collect.Lists;
 
+import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -28,6 +31,7 @@ import com.ht.bnu_tiku_backend.mongodb.model.AnswerBlock;
 
 import com.ht.bnu_tiku_backend.elasticsearch.model.Question;
 import com.ht.bnu_tiku_backend.service.QuestionService;
+import com.ht.bnu_tiku_backend.utils.WordUtils;
 import com.ht.bnu_tiku_backend.utils.request.QuestionSearchRequest;
 import com.latextoword.Latex_Word;
 import jakarta.annotation.Resource;
@@ -250,5 +254,16 @@ public class EsQuestionServiceImplTest {
 
         esQuestionService.searchQuestionByCombination(questionSearchRequest);
 
+    }
+
+    @Test
+    public void testGenerateDocx() {
+
+    }
+
+    @Test
+    public void testGeneratePdf() {
+        System.out.println(esQuestionService.generateDocx(List.of(81L, 79L, 82L)));
+//        System.out.println(esQuestionService.generateDocx(List.of(5001L, 5000L, 5000L)));
     }
 }
