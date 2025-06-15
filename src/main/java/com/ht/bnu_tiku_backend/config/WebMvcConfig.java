@@ -28,17 +28,17 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .allowedHeaders("*")
                 .allowCredentials(true); // 允许携带 cookie
     }
-    @Override
-    public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(loginInterceptor)
-            .addPathPatterns("/**") // ❗需要登录的接口路径.excludePathPatterns("/login")
-            .excludePathPatterns(
-                    "/user/login",
-                    "/user/register",
-                    "/question/**",
-                    "/chat/**",
-                    "/kp/**",
-                    "/v3/**",
-                    "/swagger-ui/**");
-    }
+//    @Override
+//    public void addInterceptors(InterceptorRegistry registry) {
+//        registry.addInterceptor(loginInterceptor)
+//            .addPathPatterns("/**") // ❗需要登录的接口路径.excludePathPatterns("/login")
+//            .excludePathPatterns(
+//                    "/user/login",
+//                    "/user/register",
+//                    "/question/**",
+//                    "/chat/**",
+//                    "/kp/**",
+//                    "/v3/**",
+//                    "/swagger-ui/**");
+//    }
 }

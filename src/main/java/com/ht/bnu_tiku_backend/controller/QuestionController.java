@@ -4,7 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.ht.bnu_tiku_backend.elasticsearch.service.impl.EsQuestionServiceImpl;
 import com.ht.bnu_tiku_backend.mongodb.service.MongoQuestionService;
 import com.ht.bnu_tiku_backend.service.QuestionService;
+import com.ht.bnu_tiku_backend.utils.ResponseResult.Result;
 import com.ht.bnu_tiku_backend.utils.page.PageQueryQuestionResult;
+import com.ht.bnu_tiku_backend.utils.request.QuestionCorrectRequest;
 import com.ht.bnu_tiku_backend.utils.request.QuestionSearchRequest;
 import jakarta.annotation.Resource;
 import org.springframework.core.io.InputStreamResource;
@@ -131,5 +133,11 @@ public class QuestionController {
                 .contentType(MediaType.parseMediaType(mime))
                 .contentLength(file.length())
                 .body(res);
+    }
+
+    @PostMapping("/correct")
+    public Result<String> correct(@RequestBody QuestionCorrectRequest questionCorrectRequest)
+    {
+        return esQuestionService.questionCorrect(questionCorrectRequest);
     }
 }

@@ -35,6 +35,8 @@ import com.ht.bnu_tiku_backend.utils.WordUtils;
 import com.ht.bnu_tiku_backend.utils.request.QuestionSearchRequest;
 import com.latextoword.Latex_Word;
 import jakarta.annotation.Resource;
+import org.apache.xmlbeans.XmlException;
+import org.apache.xmlbeans.XmlObject;
 import org.junit.Test;
 import org.junit.platform.commons.util.StringUtils;
 import org.junit.runner.RunWith;
@@ -258,7 +260,11 @@ public class EsQuestionServiceImplTest {
 
     @Test
     public void testGenerateDocx() {
-
+        try {
+            XmlObject.Factory.parse("<m:oMath xmlns:m='http://schemas.openxmlformats.org/officeDocument/2006/math' xmlns:w='http://schemas.openxmlformats.org/wordprocessingml/2006/main'><m:r><m:t>​</m:t></m:r></m:oMath>");
+        } catch (XmlException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Test

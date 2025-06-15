@@ -1,4 +1,5 @@
 package com.ht.bnu_tiku_backend.elasticsearch.service.impl;
+import java.util.Date;
 
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.query_dsl.RangeQuery;
@@ -9,17 +10,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ht.bnu_tiku_backend.elasticsearch.model.Question;
 import com.ht.bnu_tiku_backend.elasticsearch.repository.EsQuestionRepository;
 import com.ht.bnu_tiku_backend.elasticsearch.service.EsQuestionService;
-import com.ht.bnu_tiku_backend.mapper.ComplexityTypeMapper;
-import com.ht.bnu_tiku_backend.mapper.CoreCompetencyMapper;
-import com.ht.bnu_tiku_backend.mapper.GradeMapper;
-import com.ht.bnu_tiku_backend.mapper.SourceMapper;
+import com.ht.bnu_tiku_backend.mapper.*;
+import com.ht.bnu_tiku_backend.model.domain.*;
 import com.ht.bnu_tiku_backend.model.domain.ComplexityType;
 import com.ht.bnu_tiku_backend.model.domain.CoreCompetency;
 import com.ht.bnu_tiku_backend.model.domain.Grade;
 import com.ht.bnu_tiku_backend.model.domain.Source;
 import com.ht.bnu_tiku_backend.mongodb.model.*;
 import com.ht.bnu_tiku_backend.mongodb.model.Image;
+import com.ht.bnu_tiku_backend.utils.ResponseResult.Result;
 import com.ht.bnu_tiku_backend.utils.page.PageQueryQuestionResult;
+import com.ht.bnu_tiku_backend.utils.request.CorrectTags;
+import com.ht.bnu_tiku_backend.utils.request.QuestionCorrectRequest;
 import com.ht.bnu_tiku_backend.utils.request.QuestionSearchRequest;
 import com.latextoword.Latex_Word;
 import jakarta.annotation.Resource;
@@ -32,11 +34,13 @@ import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.opc.OPCPackage;
 import org.apache.poi.openxml4j.opc.PackagePart;
 import org.apache.poi.util.Units;
+import org.apache.poi.xwpf.usermodel.ParagraphAlignment;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
 import org.apache.xmlbeans.XmlObject;
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -111,6 +115,10 @@ public class EsQuestionServiceImpl implements EsQuestionService {
     private ElasticsearchTemplate elasticsearchTemplate;
     private String htmlLike;
     private RangeQuery.Builder range;
+    @Autowired
+    private QuestionMapper questionMapper;
+    @Autowired
+    private QuestionRevisionLogMapper questionRevisionLogMapper;
 
     @Override
     public void saveQuestion(Question question) {
@@ -371,6 +379,7 @@ public class EsQuestionServiceImpl implements EsQuestionService {
             List<Object> parts = splitContent(stem);      // 富文本拆分
 //            System.out.println(parts);
             XWPFParagraph para = doc.createParagraph();
+            para.setAlignment(ParagraphAlignment.LEFT);
             StringBuilder ommlBuilder = new StringBuilder();
             // ① 起一个 <m:oMathPara> 容器（带 namespace）
 
@@ -408,7 +417,7 @@ public class EsQuestionServiceImpl implements EsQuestionService {
 
                 /* ---------- LaTeX 公式 ---------- */
                 if (part instanceof OmmlWrapper ow) {
-//                    ensureOpen.accept(null);                 // ① 先保证 <m:oMathPara> 已开启
+                    ensureOpen.accept(null);                 // ① 先保证 <m:oMathPara> 已开启
                     String omml = StringEscapeUtils.unescapeXml(ow.getOmml())
                             .replaceAll("<m:oMathPara[^>]*>|</m:oMathPara>", "");
                     if (!omml.contains("xmlns:m"))
@@ -475,7 +484,7 @@ public class EsQuestionServiceImpl implements EsQuestionService {
         return out;
     }
     private static void flushOmmlToParagraph(XWPFParagraph para, StringBuilder sb) {
-//        System.out.println(sb.toString());
+        System.out.println(sb.toString());
         if (sb.isEmpty()) return;
 //        if (!sb.toString().endsWith("</m:oMathPara>"))
 //            sb.append("</m:oMathPara>");
@@ -503,7 +512,8 @@ public class EsQuestionServiceImpl implements EsQuestionService {
 
             if (m.group(1) != null) {                 // LaTeX 公式
                 String latex = m.group(1).replace("$$", "$");
-                String omml = Latex_Word.latexToWord(latex);   // ← 关键替换
+                String cleanLatex = latex.replaceAll("[<>]", "&gt;");
+                String omml = Latex_Word.latexToWord(cleanLatex);   // ← 关键替换
                 list.add(new OmmlWrapper(omml));
             } else if (m.group(2) != null) {          // 普通图片
                 BufferedImage img = null;
@@ -704,6 +714,43 @@ public class EsQuestionServiceImpl implements EsQuestionService {
 //        System.out.println(pageQueryQuestionResult);
 
         return pageQueryQuestionResult;
+    }
+
+    @Override
+    public Result<String> questionCorrect(QuestionCorrectRequest questionCorrectRequest) {
+        Question question = esQuestionRepository.findByQuestionId(questionCorrectRequest.getQuestionId());
+        CorrectTags correctTags = questionCorrectRequest.getCorrectTags();
+        ObjectMapper objectMapper = new ObjectMapper();
+        QuestionRevisionLog questionRevisionLog = new QuestionRevisionLog();
+        questionRevisionLog.setQuestionId(question.getQuestionId());
+        if(StringUtils.equals(questionCorrectRequest.getCorrectType(), "tags")){
+            questionRevisionLog.setModifiedField(0);
+            try {
+                questionRevisionLog.setOldValue(objectMapper.writeValueAsString(question));
+                questionRevisionLog.setNewValue(objectMapper.writeValueAsString(correctTags));
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+            questionRevisionLog.setModifiedBy(Long.valueOf(questionCorrectRequest.getUserId()));
+            questionRevisionLogMapper.insert(questionRevisionLog);
+        } else {
+            if(questionCorrectRequest.getCorrectType().equals("stem")){
+                questionRevisionLog.setModifiedField(1);
+                questionRevisionLog.setOldValue(question.getStemBlock().getText());
+            }
+            if(questionCorrectRequest.getCorrectType().equals("explanation")) {
+                questionRevisionLog.setModifiedField(2);
+                questionRevisionLog.setOldValue(question.getExplanationBlock().getExplanation().getText());
+            }
+            if(questionCorrectRequest.getCorrectType().equals("answer")) {
+                questionRevisionLog.setModifiedField(3);
+                questionRevisionLog.setOldValue(question.getAnswerBlock().getText());
+            }
+            questionRevisionLog.setNewValue(questionCorrectRequest.getCorrection());
+            questionRevisionLog.setModifiedBy(Long.valueOf(questionCorrectRequest.getUserId()));
+            questionRevisionLogMapper.insert(questionRevisionLog);
+        }
+        return Result.ok("1");
     }
 
     private RangeQuery buildDifficultyRange(String diffKey) {

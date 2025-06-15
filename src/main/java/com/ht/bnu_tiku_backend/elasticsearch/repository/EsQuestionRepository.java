@@ -14,5 +14,7 @@ public interface EsQuestionRepository extends ElasticsearchRepository<Question, 
 
     List<Question> findByParentId(Long parentId);
 
+    Question findByQuestionId(Integer parentId);
+
     List<Question> findByQuestionIdIn(List<Long> questionIds);
 }

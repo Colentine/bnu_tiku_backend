@@ -11,10 +11,10 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(RuntimeException.class)
-    public Result<?> handleRuntimeException(RuntimeException e) {
-        return Result.fail(ResultCode.SERVER_ERROR);
-    }
+//    @ExceptionHandler(RuntimeException.class)
+//    public Result<?> handleRuntimeException(RuntimeException e) {
+//        return Result.fail(ResultCode.SERVER_ERROR);
+//    }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public Result<?> handleIllegalArgument(IllegalArgumentException e) {

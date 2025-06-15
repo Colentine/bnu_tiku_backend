@@ -4,6 +4,7 @@ import lombok.Data;
 
 @Data
 public class QuestionSearchRequest {
+
     String knowledgePointName;
 
     String keyword;
