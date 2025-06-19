@@ -7,13 +7,14 @@ import lombok.Data;
 
 /**
  * 学校表
+ *
  * @TableName school
  */
-@TableName(value ="school")
+@TableName(value = "school")
 @Data
 public class School {
     /**
-     * 
+     *
      */
     @TableId(type = IdType.AUTO)
     private Integer id;
@@ -36,7 +37,7 @@ public class School {
         }
         School other = (School) that;
         return (this.getId() == null ? other.getId() == null : this.getId().equals(other.getId()))
-            && (this.getSchoolName() == null ? other.getSchoolName() == null : this.getSchoolName().equals(other.getSchoolName()));
+                && (this.getSchoolName() == null ? other.getSchoolName() == null : this.getSchoolName().equals(other.getSchoolName()));
     }
 
     @Override

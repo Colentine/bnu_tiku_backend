@@ -1,4 +1,5 @@
 package com.ht.bnu_tiku_backend.elasticsearch.service.impl;
+
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -46,6 +47,7 @@ import org.springframework.data.elasticsearch.repository.ElasticsearchRepository
 import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.junit.jupiter.api.Assertions.*;
+
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class EsQuestionServiceImplTest {
@@ -110,7 +112,8 @@ public class EsQuestionServiceImplTest {
             try {
                 question.setKnowledgePointIds(objectMapper.readValue(
                         mysqlQuestion.get("knowledge_point_list")
-                        , new TypeReference<List<Long>>() {}
+                        , new TypeReference<List<Long>>() {
+                        }
                 ));
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -128,7 +131,7 @@ public class EsQuestionServiceImplTest {
             question.setComplexityId(complexityTypeMapper.selectOne(complexityQueryWrapper).getId());
 
             question.setCreatedBy(1L);
-            if(mysqlQuestion.get("question_type").equals("0")){
+            if (mysqlQuestion.get("question_type").equals("0")) {
                 StemBlock stemBlock = new StemBlock();
                 stemBlock.setText(mysqlQuestion.get("stem"));
                 question.setStemBlock(stemBlock);
@@ -142,14 +145,14 @@ public class EsQuestionServiceImplTest {
                 explanationBlock.setExplanation(explanation);
                 question.setExplanationBlock(explanationBlock);
                 esQuestionServiceImpl.saveQuestion(question);
-            }else{
+            } else {
                 StemBlock stemBlock = new StemBlock();
                 stemBlock.setText(mysqlQuestion.get("composite_question_stem"));
                 question.setStemBlock(stemBlock);
                 List<Map<String, String>> subQuestions = new ArrayList<>();
                 String subQuestionString = mysqlQuestion.get("sub_questions");
                 //System.out.println(subQuestionString);
-                if(StringUtils.isNotBlank(subQuestionString)){
+                if (StringUtils.isNotBlank(subQuestionString)) {
                     try {
                         subQuestions.addAll(objectMapper.readValue(
                                 subQuestionString,
@@ -160,7 +163,7 @@ public class EsQuestionServiceImplTest {
                     }
                 }
                 System.out.println(subQuestions);
-                if(!subQuestions.isEmpty()){
+                if (!subQuestions.isEmpty()) {
                     subQuestions.forEach(subQuestionMap -> {
                         Question subQuestion = new Question();
                         subQuestion.setQuestionId(Long.valueOf(subQuestionMap.get("question_id")));
@@ -202,7 +205,7 @@ public class EsQuestionServiceImplTest {
 
     @Test
     public void generateDocx() {
-        esQuestionService.generateDocx(List.of(1L,2L));
+        esQuestionService.generateDocx(List.of(1L, 2L));
     }
 
     @Test
@@ -210,9 +213,9 @@ public class EsQuestionServiceImplTest {
     }
 
     @Test
-    public void latexToMathml(){
-        String latexStr="$$2+x$$";
-        String omml= Latex_Word.latexToWord(latexStr);
+    public void latexToMathml() {
+        String latexStr = "$$2+x$$";
+        String omml = Latex_Word.latexToWord(latexStr);
         System.out.println(omml);
     }
 

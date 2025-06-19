@@ -3,24 +3,27 @@ package com.ht.bnu_tiku_backend.model.domain;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+
 import java.util.Date;
+
 import lombok.Data;
 
 /**
  * 习题表
+ *
  * @TableName question
  */
-@TableName(value ="question")
+@TableName(value = "question")
 @Data
 public class Question {
     /**
-     * 
+     *
      */
     @TableId(type = IdType.AUTO)
     private Long id;
 
     /**
-     * 
+     *
      */
     private Long parentId;
 
@@ -70,12 +73,12 @@ public class Question {
     private Long createdBy;
 
     /**
-     * 
+     *
      */
     private Date createdAt;
 
     /**
-     * 
+     *
      */
     private Date updatedAt;
 
@@ -92,18 +95,18 @@ public class Question {
         }
         Question other = (Question) that;
         return (this.getId() == null ? other.getId() == null : this.getId().equals(other.getId()))
-            && (this.getParentId() == null ? other.getParentId() == null : this.getParentId().equals(other.getParentId()))
-            && (this.getQuestionType() == null ? other.getQuestionType() == null : this.getQuestionType().equals(other.getQuestionType()))
-            && (this.getSimpleQuestionType() == null ? other.getSimpleQuestionType() == null : this.getSimpleQuestionType().equals(other.getSimpleQuestionType()))
-            && (this.getSubject() == null ? other.getSubject() == null : this.getSubject().equals(other.getSubject()))
-            && (this.getGradeId() == null ? other.getGradeId() == null : this.getGradeId().equals(other.getGradeId()))
-            && (this.getSourceId() == null ? other.getSourceId() == null : this.getSourceId().equals(other.getSourceId()))
-            && (this.getDifficulty() == null ? other.getDifficulty() == null : this.getDifficulty().equals(other.getDifficulty()))
-            && (this.getComplexityTypeId() == null ? other.getComplexityTypeId() == null : this.getComplexityTypeId().equals(other.getComplexityTypeId()))
-            && (this.getCoreCompetencyId() == null ? other.getCoreCompetencyId() == null : this.getCoreCompetencyId().equals(other.getCoreCompetencyId()))
-            && (this.getCreatedBy() == null ? other.getCreatedBy() == null : this.getCreatedBy().equals(other.getCreatedBy()))
-            && (this.getCreatedAt() == null ? other.getCreatedAt() == null : this.getCreatedAt().equals(other.getCreatedAt()))
-            && (this.getUpdatedAt() == null ? other.getUpdatedAt() == null : this.getUpdatedAt().equals(other.getUpdatedAt()));
+                && (this.getParentId() == null ? other.getParentId() == null : this.getParentId().equals(other.getParentId()))
+                && (this.getQuestionType() == null ? other.getQuestionType() == null : this.getQuestionType().equals(other.getQuestionType()))
+                && (this.getSimpleQuestionType() == null ? other.getSimpleQuestionType() == null : this.getSimpleQuestionType().equals(other.getSimpleQuestionType()))
+                && (this.getSubject() == null ? other.getSubject() == null : this.getSubject().equals(other.getSubject()))
+                && (this.getGradeId() == null ? other.getGradeId() == null : this.getGradeId().equals(other.getGradeId()))
+                && (this.getSourceId() == null ? other.getSourceId() == null : this.getSourceId().equals(other.getSourceId()))
+                && (this.getDifficulty() == null ? other.getDifficulty() == null : this.getDifficulty().equals(other.getDifficulty()))
+                && (this.getComplexityTypeId() == null ? other.getComplexityTypeId() == null : this.getComplexityTypeId().equals(other.getComplexityTypeId()))
+                && (this.getCoreCompetencyId() == null ? other.getCoreCompetencyId() == null : this.getCoreCompetencyId().equals(other.getCoreCompetencyId()))
+                && (this.getCreatedBy() == null ? other.getCreatedBy() == null : this.getCreatedBy().equals(other.getCreatedBy()))
+                && (this.getCreatedAt() == null ? other.getCreatedAt() == null : this.getCreatedAt().equals(other.getCreatedAt()))
+                && (this.getUpdatedAt() == null ? other.getUpdatedAt() == null : this.getUpdatedAt().equals(other.getUpdatedAt()));
     }
 
     @Override

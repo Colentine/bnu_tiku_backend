@@ -3,14 +3,17 @@ package com.ht.bnu_tiku_backend.model.domain;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+
 import java.util.Date;
+
 import lombok.Data;
 
 /**
  * 题干表
+ *
  * @TableName question_stem_block
  */
-@TableName(value ="question_stem_block")
+@TableName(value = "question_stem_block")
 @Data
 public class QuestionStemBlock {
     /**
@@ -67,13 +70,13 @@ public class QuestionStemBlock {
         }
         QuestionStemBlock other = (QuestionStemBlock) that;
         return (this.getId() == null ? other.getId() == null : this.getId().equals(other.getId()))
-            && (this.getQuestionId() == null ? other.getQuestionId() == null : this.getQuestionId().equals(other.getQuestionId()))
-            && (this.getContentType() == null ? other.getContentType() == null : this.getContentType().equals(other.getContentType()))
-            && (this.getTextContent() == null ? other.getTextContent() == null : this.getTextContent().equals(other.getTextContent()))
-            && (this.getImageFileId() == null ? other.getImageFileId() == null : this.getImageFileId().equals(other.getImageFileId()))
-            && (this.getPosition() == null ? other.getPosition() == null : this.getPosition().equals(other.getPosition()))
-            && (this.getCreatedAt() == null ? other.getCreatedAt() == null : this.getCreatedAt().equals(other.getCreatedAt()))
-            && (this.getUpdatedAt() == null ? other.getUpdatedAt() == null : this.getUpdatedAt().equals(other.getUpdatedAt()));
+                && (this.getQuestionId() == null ? other.getQuestionId() == null : this.getQuestionId().equals(other.getQuestionId()))
+                && (this.getContentType() == null ? other.getContentType() == null : this.getContentType().equals(other.getContentType()))
+                && (this.getTextContent() == null ? other.getTextContent() == null : this.getTextContent().equals(other.getTextContent()))
+                && (this.getImageFileId() == null ? other.getImageFileId() == null : this.getImageFileId().equals(other.getImageFileId()))
+                && (this.getPosition() == null ? other.getPosition() == null : this.getPosition().equals(other.getPosition()))
+                && (this.getCreatedAt() == null ? other.getCreatedAt() == null : this.getCreatedAt().equals(other.getCreatedAt()))
+                && (this.getUpdatedAt() == null ? other.getUpdatedAt() == null : this.getUpdatedAt().equals(other.getUpdatedAt()));
     }
 
     @Override

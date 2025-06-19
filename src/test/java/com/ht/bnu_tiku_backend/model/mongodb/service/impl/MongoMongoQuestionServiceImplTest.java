@@ -1,4 +1,5 @@
 package com.ht.bnu_tiku_backend.model.mongodb.service.impl;
+
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -114,7 +115,8 @@ public class MongoMongoQuestionServiceImplTest {
             try {
                 question.setKnowledgePointIds(objectMapper.readValue(
                         mysqlQuestion.get("knowledge_point_list")
-                        , new TypeReference<List<Long>>() {}
+                        , new TypeReference<List<Long>>() {
+                        }
                 ));
             } catch (JsonProcessingException e) {
                 throw new RuntimeException(e);
@@ -132,7 +134,7 @@ public class MongoMongoQuestionServiceImplTest {
             question.setComplexityId(complexityTypeMapper.selectOne(complexityQueryWrapper).getId());
 
             question.setCreatedBy(1L);
-            if(mysqlQuestion.get("question_type").equals("0")){
+            if (mysqlQuestion.get("question_type").equals("0")) {
                 StemBlock stemBlock = new StemBlock();
                 stemBlock.setText(mysqlQuestion.get("stem"));
                 question.setStemBlock(stemBlock);
@@ -146,14 +148,14 @@ public class MongoMongoQuestionServiceImplTest {
                 explanationBlock.setExplanation(explanation);
                 question.setExplanationBlock(explanationBlock);
                 mongoQuestionService.saveQuestion(question);
-            }else{
+            } else {
                 StemBlock stemBlock = new StemBlock();
                 stemBlock.setText(mysqlQuestion.get("composite_question_stem"));
                 question.setStemBlock(stemBlock);
                 List<Map<String, String>> subQuestions = new ArrayList<>();
                 String subQuestionString = mysqlQuestion.get("sub_questions");
                 //System.out.println(subQuestionString);
-                if(StringUtils.isNotBlank(subQuestionString)){
+                if (StringUtils.isNotBlank(subQuestionString)) {
                     try {
                         subQuestions.addAll(objectMapper.readValue(
                                 subQuestionString,
@@ -164,7 +166,7 @@ public class MongoMongoQuestionServiceImplTest {
                     }
                 }
                 System.out.println(subQuestions);
-                if(!subQuestions.isEmpty()){
+                if (!subQuestions.isEmpty()) {
                     subQuestions.forEach(subQuestionMap -> {
                         Question subQuestion = new Question();
                         subQuestion.setQuestionId(Long.valueOf(subQuestionMap.get("question_id")));

@@ -1,4 +1,5 @@
 package com.ht.bnu_tiku_backend;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -33,28 +34,20 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 public class BnuDatabaseTests {
     @Resource
     private UserMapper userMapper;
-
     @Resource
     private KnowledgePointMapper knowledgePointMapper;
-
     @Resource
     private QuestionKnowledgeMapper questionKnowledgeMapper;
-
     @Resource
     private QuestionMapper questionMapper;
-
     @Resource
     private QuestionAnswerBlockMapper questionAnswerBlockMapper;
-
     @Resource
     private QuestionExplanationBlockMapper questionExplanationBlockMapper;
-
     @Resource
     private QuestionStemBlockMapper questionStemBlockMapper;
-
     @Resource
     private QuestionOptionMapper questionOptionMapper;
-
     @Resource
     private ImageFileMapper imageFileMapper;
     @Resource
@@ -67,14 +60,14 @@ public class BnuDatabaseTests {
     private QuestionService questionService;
 
     /**
-     * @description:  向数据库插入两个用户
+     * @description: 向数据库插入两个用户
      * @param:
      * @return:
      * @author huangtao
      * @date: 2025/4/17 14:01
      */
     @Test
-    public void userInsertTest(){
+    public void userInsertTest() {
         User user = new User();
         user.setUserAccount("000001");
         user.setUserName("kkkkk");
@@ -114,7 +107,8 @@ public class BnuDatabaseTests {
 
         List<KnowledgePoint> points = mapper.readValue(
                 new File(path),
-                new TypeReference<List<KnowledgePoint>>() {}
+                new TypeReference<List<KnowledgePoint>>() {
+                }
         );
 
         // 批量插入（逐条 insert 可使用批处理优化）
@@ -131,7 +125,7 @@ public class BnuDatabaseTests {
      * @date: 2025/4/17 14:03
      */
     @Test
-    public void knowledgePointCountTest(){
+    public void knowledgePointCountTest() {
         Long l = knowledgePointMapper.selectCount(null);
         System.out.println(l);
     }
@@ -144,11 +138,11 @@ public class BnuDatabaseTests {
      * @date: 2025/4/17 14:03
      */
     @Test
-    public void knowledgePointsSelectByNameTest(){
+    public void knowledgePointsSelectByNameTest() {
         QueryWrapper<KnowledgePoint> objectQueryWrapper = new QueryWrapper<>();
-        objectQueryWrapper.eq("name","图形的性质").or().eq("name", "三角形").or().eq("name", "勾股定理及逆定理").or().eq("name", "勾股定理").or().eq("name", "已知两点坐标求两点距离");
+        objectQueryWrapper.eq("name", "图形的性质").or().eq("name", "三角形").or().eq("name", "勾股定理及逆定理").or().eq("name", "勾股定理").or().eq("name", "已知两点坐标求两点距离");
         knowledgePointMapper.selectList(objectQueryWrapper).forEach(knowledgePoint -> {
-            System.out.println(knowledgePoint.getName()+":"+knowledgePoint.getId());
+            System.out.println(knowledgePoint.getName() + ":" + knowledgePoint.getId());
         });
     }
 
@@ -161,7 +155,7 @@ public class BnuDatabaseTests {
      * @date: 2025/4/17 19:35
      */
     @Test
-    public void knowledgePointsSelectByIdTest(){
+    public void knowledgePointsSelectByIdTest() {
         QueryWrapper<QuestionKnowledge> objectQueryWrapper = new QueryWrapper<>();
         objectQueryWrapper.in("knowledge_point_id", "5502");
         questionKnowledgeMapper.selectList(objectQueryWrapper).forEach(questionKnowledge -> {
@@ -177,13 +171,13 @@ public class BnuDatabaseTests {
      * @date: 2025/4/17 14:03
      */
     @Test
-    public void userSelectTest(){
+    public void userSelectTest() {
         User user = userMapper.selectById(1L);
         System.out.println(user);
     }
 
     @Test
-    public void selectOneSimpleQuestionByKnowledgePointTest(){
+    public void selectOneSimpleQuestionByKnowledgePointTest() {
         QueryWrapper<KnowledgePoint> objectQueryWrapper = new QueryWrapper<>();
         objectQueryWrapper.eq("name", "正负数的定义");
         KnowledgePoint knowledgePoint = knowledgePointMapper.selectOne(objectQueryWrapper);
@@ -256,10 +250,10 @@ public class BnuDatabaseTests {
             questionKnowledgeQueryWrapper.eq("question_id", questionId);
             List<Long> knowledgeList = questionKnowledgeMapper.selectList(questionKnowledgeQueryWrapper).stream().map(QuestionKnowledge::getKnowledgePointId).toList();
             // 3.4 判断试题的类型
-            if(questionType == 0){ // 如果是简单题，直接查询题干块、答案块、解析块
-                HashMap<String, String> simpleQuestionResult = SelectSimpleQuestion(false,questionId, question, knowledgeList, results);
+            if (questionType == 0) { // 如果是简单题，直接查询题干块、答案块、解析块
+                HashMap<String, String> simpleQuestionResult = SelectSimpleQuestion(false, questionId, question, knowledgeList, results);
                 results.add(simpleQuestionResult);
-            }else{ // 如果是复合题，需要去查询所有小题，再查询小题的题干、答案、解析块
+            } else { // 如果是复合题，需要去查询所有小题，再查询小题的题干、答案、解析块
                 StringBuilder compositeQuestionStemStringBuilder = new StringBuilder();
                 QueryWrapper<QuestionStemBlock> compositeQuestionStemBlockQueryWrapper = new QueryWrapper<>();
                 compositeQuestionStemBlockQueryWrapper.eq("question_id", questionId);
@@ -273,7 +267,7 @@ public class BnuDatabaseTests {
                                 return compositeQuestionStemBlock.getImageFileId().toString() + ":" + compositeQuestionStemBlock.getPosition();
                             }
                         }).toList();
-                if(!compositeQuestionStemImageStringList.isEmpty()) {
+                if (!compositeQuestionStemImageStringList.isEmpty()) {
                     insertImageUrlToQuestionBlockString(compositeQuestionStemImageStringList, compositeQuestionStemStringBuilder);
                 }
 
@@ -290,16 +284,16 @@ public class BnuDatabaseTests {
                 compositeQuestionResult.put("composite_question_stem", compositeQuestionStemStringBuilder.toString());
                 int subQuestionIndex = 1;
                 for (Question subQuestion : questions) {
-                    HashMap<String, String> subQuestionResult = SelectSimpleQuestion(true,subQuestion.getId(), subQuestion, knowledgeList, results);
+                    HashMap<String, String> subQuestionResult = SelectSimpleQuestion(true, subQuestion.getId(), subQuestion, knowledgeList, results);
                     ObjectMapper objectMapper = new ObjectMapper();
                     String subQuestionResultString = objectMapper.writeValueAsString(subQuestionResult);
-                    compositeQuestionResult.put("小题"+String.valueOf(subQuestionIndex), subQuestionResultString);
+                    compositeQuestionResult.put("小题" + String.valueOf(subQuestionIndex), subQuestionResultString);
                     subQuestionIndex += 1;
                 }
                 results.add(compositeQuestionResult);
             }
         }
-        System.out.println("查询知识点："+knowledgePointName+","+"查询集合（大小："+String.valueOf(results.size())+"）："+results);
+        System.out.println("查询知识点：" + knowledgePointName + "," + "查询集合（大小：" + String.valueOf(results.size()) + "）：" + results);
     }
 
     private HashMap<String, String> SelectSimpleQuestion(Boolean isSubQuestion, Long questionId, Question question, List<Long> knowledgeList, List<Map<String, String>> results) throws JsonProcessingException {
@@ -311,18 +305,18 @@ public class BnuDatabaseTests {
 
         List<String> stemImgStringlist = questionStemBlockMapper.selectList(questionStemBlockQueryWrapper).stream()
                 .map(questionStemBlock -> {
-                    if(questionStemBlock.getContentType() == 0){
+                    if (questionStemBlock.getContentType() == 0) {
                         questionStemStringBuilder.append(questionStemBlock.getTextContent());
                         return null;
-                    }else{
+                    } else {
                         return questionStemBlock.getImageFileId().toString() + ":" + questionStemBlock.getPosition();
                     }
                 }).toList();
-        if(!stemImgStringlist.isEmpty()) {
+        if (!stemImgStringlist.isEmpty()) {
             insertImageUrlToQuestionBlockString(stemImgStringlist, questionStemStringBuilder);
         }
 
-        if(question.getSimpleQuestionType() == 0) {
+        if (question.getSimpleQuestionType() == 0) {
             QueryWrapper<QuestionOption> questionOptionQueryWrapper = new QueryWrapper<>();
             questionOptionQueryWrapper.eq("question_id", questionId);
             List<QuestionOption> questionOptions = questionOptionMapper.selectList(questionOptionQueryWrapper);
@@ -330,7 +324,7 @@ public class BnuDatabaseTests {
                 StringBuilder optionStringBuilder = new StringBuilder(questionOption.getContent());
                 String imageFileIds = (String) questionOption.getImageFileIds();
                 String imagePositions = (String) questionOption.getImagePositions();
-                if(com.baomidou.mybatisplus.core.toolkit.StringUtils.isNotBlank(imageFileIds)) {
+                if (com.baomidou.mybatisplus.core.toolkit.StringUtils.isNotBlank(imageFileIds)) {
                     ObjectMapper objectMapper = new ObjectMapper();
                     List<String> imgIdlist = objectMapper.readValue(imageFileIds, List.class);
                     List<String> imgPositionList = objectMapper.readValue(imagePositions, List.class);
@@ -359,7 +353,7 @@ public class BnuDatabaseTests {
                         return questionAnswerBlock.getImageFileId().toString() + ":" + questionAnswerBlock.getPosition();
                     }
                 }).toList();
-        if(!answerImageStringList.isEmpty()) {
+        if (!answerImageStringList.isEmpty()) {
             insertImageUrlToQuestionBlockString(answerImageStringList, questionAnswerStringBuilder);
         }
 
@@ -377,12 +371,12 @@ public class BnuDatabaseTests {
                         return questionExplanationBlock.getImageFileId().toString() + ":" + questionExplanationBlock.getPosition();
                     }
                 }).toList();
-        if(!explanationImageStringList.isEmpty()) {
+        if (!explanationImageStringList.isEmpty()) {
             insertImageUrlToQuestionBlockString(explanationImageStringList, questionExplanationStringBuilder);
         }
 
         HashMap<String, String> resultHashMap = new HashMap<>();
-        if(!isSubQuestion) {
+        if (!isSubQuestion) {
             resultHashMap.put("question_type", String.valueOf(question.getQuestionType()));
             resultHashMap.put("difficulty", String.valueOf(question.getDifficulty()));
             resultHashMap.put("complexity_type", complexityTypeMapper.selectById(question.getComplexityTypeId()).getTypeName());
@@ -398,7 +392,7 @@ public class BnuDatabaseTests {
 
     private void insertImageUrlToQuestionBlockString(List<String> imgStringlist, StringBuilder questionStemStringBuilder) {
         imgStringlist.forEach(imgString -> {
-            if(StringUtils.isNotBlank(imgString)) {
+            if (StringUtils.isNotBlank(imgString)) {
                 String[] splits = imgString.split(":");
                 String imgFileId = splits[0];
                 String imgPosition = splits[1];
@@ -430,13 +424,13 @@ public class BnuDatabaseTests {
         Random random = new Random();
         AtomicReference<Long> questionId = new AtomicReference<>(18L);
         for (Row row : sheet) {
-            if(row.getRowNum() == 0) {
+            if (row.getRowNum() == 0) {
                 continue;
             }
             List<String> levelFiveKps = new ArrayList<>();
             for (int i = 0; i < 5; i++) {
                 Cell cell = row.getCell(i);
-                if(cell == null) {
+                if (cell == null) {
                     continue;
                 }
                 cell.setCellType(CellType.STRING);
@@ -449,27 +443,26 @@ public class BnuDatabaseTests {
             String questionListString = cell.getStringCellValue().trim();
             objectMapper
                     .readValue(questionListString, new TypeReference<List<Map<String, String>>>() {
-            }).stream().forEach(questionMap->{
+                    }).stream().forEach(questionMap -> {
                         int questionType = 0;
-                        int  simpleQuestionType = random.nextInt(0, 4);
-                        long complexityTypeId =  random.nextInt(1, 10);
-                        long gradeId =  random.nextInt(1, 6);
+                        int simpleQuestionType = random.nextInt(0, 4);
+                        long complexityTypeId = random.nextInt(1, 10);
+                        long gradeId = random.nextInt(1, 6);
                         long sourceId = random.nextInt(1, 10);
                         double difficulty = Math.random();
                         long coreCompetencyId = random.nextInt(1, 10);
-                        Question metaQuestionInfo = new Question();
-                        metaQuestionInfo.setQuestionType(questionType);
-                        metaQuestionInfo.setSimpleQuestionType(simpleQuestionType);
-                        metaQuestionInfo.setGradeId(gradeId);
-                        metaQuestionInfo.setSourceId(sourceId);
-                        metaQuestionInfo.setDifficulty(difficulty);
-                        metaQuestionInfo.setComplexityTypeId(complexityTypeId);
-                        metaQuestionInfo.setCoreCompetencyId(coreCompetencyId);
-                        metaQuestionInfo.setCreatedBy(1L);
-                        questionMapper.insert(metaQuestionInfo);
+                        Question questionMetaInfo = new Question();
+                        questionMetaInfo.setQuestionType(questionType);
+                        questionMetaInfo.setSimpleQuestionType(simpleQuestionType);
+                        questionMetaInfo.setGradeId(gradeId);
+                        questionMetaInfo.setSourceId(sourceId);
+                        questionMetaInfo.setDifficulty(difficulty);
+                        questionMetaInfo.setComplexityTypeId(complexityTypeId);
+                        questionMetaInfo.setCoreCompetencyId(coreCompetencyId);
+                        questionMetaInfo.setCreatedBy(1L);
+                        questionMapper.insert(questionMetaInfo);
 
-                        for(String kp:levelFiveKps)
-                        {
+                        for (String kp : levelFiveKps) {
                             String knowledgeId = knowledgeToId.get(kp);
                             QuestionKnowledge questionKnowledge = new QuestionKnowledge();
                             questionKnowledge.setQuestionId(questionId.get());
@@ -527,12 +520,12 @@ public class BnuDatabaseTests {
     }
 
     @Test
-    public void logicDeleteUserTest(){
+    public void logicDeleteUserTest() {
         userMapper.deleteById(16L);
     }
 
     @Test
-    public void md5EncryptTest(){
+    public void md5EncryptTest() {
         String s = SecureUtil.md5("12344");
         System.out.println(s);
     }

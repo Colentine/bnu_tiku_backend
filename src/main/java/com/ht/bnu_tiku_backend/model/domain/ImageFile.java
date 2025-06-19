@@ -3,14 +3,17 @@ package com.ht.bnu_tiku_backend.model.domain;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+
 import java.util.Date;
+
 import lombok.Data;
 
 /**
  * 图像表
+ *
  * @TableName image_file
  */
-@TableName(value ="image_file")
+@TableName(value = "image_file")
 @Data
 public class ImageFile {
     /**
@@ -47,9 +50,9 @@ public class ImageFile {
         }
         ImageFile other = (ImageFile) that;
         return (this.getId() == null ? other.getId() == null : this.getId().equals(other.getId()))
-            && (this.getImageUrl() == null ? other.getImageUrl() == null : this.getImageUrl().equals(other.getImageUrl()))
-            && (this.getUploadedBy() == null ? other.getUploadedBy() == null : this.getUploadedBy().equals(other.getUploadedBy()))
-            && (this.getUploadedAt() == null ? other.getUploadedAt() == null : this.getUploadedAt().equals(other.getUploadedAt()));
+                && (this.getImageUrl() == null ? other.getImageUrl() == null : this.getImageUrl().equals(other.getImageUrl()))
+                && (this.getUploadedBy() == null ? other.getUploadedBy() == null : this.getUploadedBy().equals(other.getUploadedBy()))
+                && (this.getUploadedAt() == null ? other.getUploadedAt() == null : this.getUploadedAt().equals(other.getUploadedAt()));
     }
 
     @Override

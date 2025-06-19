@@ -3,14 +3,17 @@ package com.ht.bnu_tiku_backend.model.domain;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+
 import java.util.Date;
+
 import lombok.Data;
 
 /**
  * 选择题选项表
+ *
  * @TableName question_option
  */
-@TableName(value ="question_option")
+@TableName(value = "question_option")
 @Data
 public class QuestionOption {
     /**
@@ -72,14 +75,14 @@ public class QuestionOption {
         }
         QuestionOption other = (QuestionOption) that;
         return (this.getId() == null ? other.getId() == null : this.getId().equals(other.getId()))
-            && (this.getQuestionId() == null ? other.getQuestionId() == null : this.getQuestionId().equals(other.getQuestionId()))
-            && (this.getLabel() == null ? other.getLabel() == null : this.getLabel().equals(other.getLabel()))
-            && (this.getContent() == null ? other.getContent() == null : this.getContent().equals(other.getContent()))
-            && (this.getImageFileIds() == null ? other.getImageFileIds() == null : this.getImageFileIds().equals(other.getImageFileIds()))
-            && (this.getImagePositions() == null ? other.getImagePositions() == null : this.getImagePositions().equals(other.getImagePositions()))
-            && (this.getIsCorrect() == null ? other.getIsCorrect() == null : this.getIsCorrect().equals(other.getIsCorrect()))
-            && (this.getCreatedAt() == null ? other.getCreatedAt() == null : this.getCreatedAt().equals(other.getCreatedAt()))
-            && (this.getUpdatedAt() == null ? other.getUpdatedAt() == null : this.getUpdatedAt().equals(other.getUpdatedAt()));
+                && (this.getQuestionId() == null ? other.getQuestionId() == null : this.getQuestionId().equals(other.getQuestionId()))
+                && (this.getLabel() == null ? other.getLabel() == null : this.getLabel().equals(other.getLabel()))
+                && (this.getContent() == null ? other.getContent() == null : this.getContent().equals(other.getContent()))
+                && (this.getImageFileIds() == null ? other.getImageFileIds() == null : this.getImageFileIds().equals(other.getImageFileIds()))
+                && (this.getImagePositions() == null ? other.getImagePositions() == null : this.getImagePositions().equals(other.getImagePositions()))
+                && (this.getIsCorrect() == null ? other.getIsCorrect() == null : this.getIsCorrect().equals(other.getIsCorrect()))
+                && (this.getCreatedAt() == null ? other.getCreatedAt() == null : this.getCreatedAt().equals(other.getCreatedAt()))
+                && (this.getUpdatedAt() == null ? other.getUpdatedAt() == null : this.getUpdatedAt().equals(other.getUpdatedAt()));
     }
 
     @Override

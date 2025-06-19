@@ -21,7 +21,7 @@ public interface QuestionService extends IService<Question> {
      * @return
      * @throws JsonProcessingException
      */
-    List<Map<String,String>> queryQuestionsByIds(List<Long> knowledgePointIdlist) throws JsonProcessingException;
+    List<Map<String,String>> queryQuestionsByKnowledgePointIds(List<Long> knowledgePointIdlist) throws JsonProcessingException;
 
     /**
      * 根据知识点查题

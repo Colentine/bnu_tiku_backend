@@ -7,13 +7,14 @@ import lombok.Data;
 
 /**
  * 核心素养
+ *
  * @TableName core_competency
  */
-@TableName(value ="core_competency")
+@TableName(value = "core_competency")
 @Data
 public class CoreCompetency {
     /**
-     * 
+     *
      */
     @TableId(type = IdType.AUTO)
     private Long id;
@@ -41,8 +42,8 @@ public class CoreCompetency {
         }
         CoreCompetency other = (CoreCompetency) that;
         return (this.getId() == null ? other.getId() == null : this.getId().equals(other.getId()))
-            && (this.getCompetencyName() == null ? other.getCompetencyName() == null : this.getCompetencyName().equals(other.getCompetencyName()))
-            && (this.getDescription() == null ? other.getDescription() == null : this.getDescription().equals(other.getDescription()));
+                && (this.getCompetencyName() == null ? other.getCompetencyName() == null : this.getCompetencyName().equals(other.getCompetencyName()))
+                && (this.getDescription() == null ? other.getDescription() == null : this.getDescription().equals(other.getDescription()));
     }
 
     @Override

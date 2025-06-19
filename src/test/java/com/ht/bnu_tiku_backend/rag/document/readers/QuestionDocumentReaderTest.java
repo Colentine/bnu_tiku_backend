@@ -2,6 +2,7 @@ package com.ht.bnu_tiku_backend.rag.document.readers;
 
 import com.ht.bnu_tiku_backend.elasticsearch.service.impl.EsQuestionServiceImpl;
 import com.ht.bnu_tiku_backend.rag.document.loaders.EsVectorStoreLoader;
+import com.ht.bnu_tiku_backend.utils.ResponseResult.Result;
 import com.ht.bnu_tiku_backend.utils.page.PageQueryQuestionResult;
 import jakarta.annotation.Resource;
 import org.junit.Test;
@@ -25,13 +26,13 @@ public class QuestionDocumentReaderTest {
 
     @Test
     public void fromQuestion() {
-        PageQueryQuestionResult pageQueryQuestionResult = esQuestionService
+        Result<PageQueryQuestionResult> pageQueryQuestionResult = esQuestionService
                 .queryQuestionsByKnowledgePointNames(Collections.singletonList("beforeMount"),
                         1L, 20L);
 
         System.out.println(pageQueryQuestionResult);
 
-        List<Document> documentList = pageQueryQuestionResult.getQuestions()
+        List<Document> documentList = pageQueryQuestionResult.getData().getQuestions()
                 .stream()
                 .map(QuestionDocumentReader::fromQuestion)
                 .toList();

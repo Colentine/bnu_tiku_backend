@@ -13,7 +13,7 @@ import java.util.List;
 public interface EsQuestionService {
     void saveQuestion(Question question);
 
-    PageQueryQuestionResult queryQuestionsByKnowledgePointNames(List<String> knowledgePointNames, Long pageNumber, Long pageSize) throws IOException;
+    Result<PageQueryQuestionResult> queryQuestionsByKnowledgePointNames(List<String> knowledgePointNames, Long pageNumber, Long pageSize) throws IOException;
 
     PageQueryQuestionResult queryQuestionsByKeyword(String keyword, Long pageNumber, Long pageSize) throws IOException;
 
@@ -21,7 +21,7 @@ public interface EsQuestionService {
 
     File generatePdf(List<Long> ids);
 
-    PageQueryQuestionResult searchQuestionByCombination(QuestionSearchRequest questionSearchRequest);
+    Result<PageQueryQuestionResult> searchQuestionByCombination(QuestionSearchRequest questionSearchRequest);
 
     Result<String> questionCorrect(QuestionCorrectRequest questionCorrectRequest);
 }

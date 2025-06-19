@@ -19,7 +19,7 @@ public class MongoUserServiceTest {
 
 
     @Test
-    public void insertUserTest(){
+    public void insertUserTest() {
         User user = new User();
         user.setId("123458111212123");
         user.setName("");

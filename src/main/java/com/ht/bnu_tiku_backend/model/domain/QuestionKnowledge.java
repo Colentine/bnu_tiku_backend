@@ -7,9 +7,10 @@ import lombok.Data;
 
 /**
  * 习题知识点关联表
+ *
  * @TableName question_knowledge
  */
-@TableName(value ="question_knowledge")
+@TableName(value = "question_knowledge")
 @Data
 public class QuestionKnowledge {
     /**
@@ -41,8 +42,8 @@ public class QuestionKnowledge {
         }
         QuestionKnowledge other = (QuestionKnowledge) that;
         return (this.getId() == null ? other.getId() == null : this.getId().equals(other.getId()))
-            && (this.getQuestionId() == null ? other.getQuestionId() == null : this.getQuestionId().equals(other.getQuestionId()))
-            && (this.getKnowledgePointId() == null ? other.getKnowledgePointId() == null : this.getKnowledgePointId().equals(other.getKnowledgePointId()));
+                && (this.getQuestionId() == null ? other.getQuestionId() == null : this.getQuestionId().equals(other.getQuestionId()))
+                && (this.getKnowledgePointId() == null ? other.getKnowledgePointId() == null : this.getKnowledgePointId().equals(other.getKnowledgePointId()));
     }
 
     @Override

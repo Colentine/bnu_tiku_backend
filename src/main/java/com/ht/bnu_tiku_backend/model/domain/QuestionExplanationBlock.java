@@ -3,14 +3,17 @@ package com.ht.bnu_tiku_backend.model.domain;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+
 import java.util.Date;
+
 import lombok.Data;
 
 /**
  * 习题解析块
+ *
  * @TableName question_explanation_block
  */
-@TableName(value ="question_explanation_block")
+@TableName(value = "question_explanation_block")
 @Data
 public class QuestionExplanationBlock {
     /**
@@ -77,15 +80,15 @@ public class QuestionExplanationBlock {
         }
         QuestionExplanationBlock other = (QuestionExplanationBlock) that;
         return (this.getId() == null ? other.getId() == null : this.getId().equals(other.getId()))
-            && (this.getQuestionId() == null ? other.getQuestionId() == null : this.getQuestionId().equals(other.getQuestionId()))
-            && (this.getExplanationType() == null ? other.getExplanationType() == null : this.getExplanationType().equals(other.getExplanationType()))
-            && (this.getContentType() == null ? other.getContentType() == null : this.getContentType().equals(other.getContentType()))
-            && (this.getImageFileId() == null ? other.getImageFileId() == null : this.getImageFileId().equals(other.getImageFileId()))
-            && (this.getExplanationText() == null ? other.getExplanationText() == null : this.getExplanationText().equals(other.getExplanationText()))
-            && (this.getInteractiveIndex() == null ? other.getInteractiveIndex() == null : this.getInteractiveIndex().equals(other.getInteractiveIndex()))
-            && (this.getPosition() == null ? other.getPosition() == null : this.getPosition().equals(other.getPosition()))
-            && (this.getCreatedAt() == null ? other.getCreatedAt() == null : this.getCreatedAt().equals(other.getCreatedAt()))
-            && (this.getUpdatedAt() == null ? other.getUpdatedAt() == null : this.getUpdatedAt().equals(other.getUpdatedAt()));
+                && (this.getQuestionId() == null ? other.getQuestionId() == null : this.getQuestionId().equals(other.getQuestionId()))
+                && (this.getExplanationType() == null ? other.getExplanationType() == null : this.getExplanationType().equals(other.getExplanationType()))
+                && (this.getContentType() == null ? other.getContentType() == null : this.getContentType().equals(other.getContentType()))
+                && (this.getImageFileId() == null ? other.getImageFileId() == null : this.getImageFileId().equals(other.getImageFileId()))
+                && (this.getExplanationText() == null ? other.getExplanationText() == null : this.getExplanationText().equals(other.getExplanationText()))
+                && (this.getInteractiveIndex() == null ? other.getInteractiveIndex() == null : this.getInteractiveIndex().equals(other.getInteractiveIndex()))
+                && (this.getPosition() == null ? other.getPosition() == null : this.getPosition().equals(other.getPosition()))
+                && (this.getCreatedAt() == null ? other.getCreatedAt() == null : this.getCreatedAt().equals(other.getCreatedAt()))
+                && (this.getUpdatedAt() == null ? other.getUpdatedAt() == null : this.getUpdatedAt().equals(other.getUpdatedAt()));
     }
 
     @Override

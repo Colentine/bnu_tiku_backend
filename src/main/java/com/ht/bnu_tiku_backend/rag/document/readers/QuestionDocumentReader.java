@@ -30,8 +30,8 @@ public class QuestionDocumentReader {
         if (Objects.equals(question.get("question_type"), "1")) {
             doc = buildCompositeQuestionDocument(question);
         }
-            return doc;
-        }
+        return doc;
+    }
 
     public static Document buildSimpleQuestionDocument(Map<String, String> question) {
         ObjectMapper objectMapper = new ObjectMapper();
@@ -51,13 +51,13 @@ public class QuestionDocumentReader {
         StringBuilder subQuestionAnswerText = new StringBuilder();
         StringBuilder subQuestionExplanationText = new StringBuilder();
         try {
-             subQuestionMaps = new ArrayList<>(objectMapper.readValue(question.get("sub_questions")
-                     , new TypeReference<List<Map<String, String>>>() {
-                     }));
+            subQuestionMaps = new ArrayList<>(objectMapper.readValue(question.get("sub_questions")
+                    , new TypeReference<List<Map<String, String>>>() {
+                    }));
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
-        if(subQuestionMaps.isEmpty()) {
+        if (subQuestionMaps.isEmpty()) {
             new Document(String.valueOf(questionText), metadata);
         }
 
@@ -88,7 +88,8 @@ public class QuestionDocumentReader {
         metadata.put("difficulty", transformDifficultyToTag(question.get("difficulty")));
         try {
             metadata.put("knowledge_points", objectMapper.readValue(question.get("knowledge_points")
-                    , new TypeReference<List<String>>(){}));
+                    , new TypeReference<List<String>>() {
+                    }));
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
@@ -99,33 +100,33 @@ public class QuestionDocumentReader {
         return metadata;
     }
 
-    public static String transformDifficultyToTag(String difficulty){
+    public static String transformDifficultyToTag(String difficulty) {
         try {
             double diff = Double.parseDouble(difficulty);
-            if(diff > 1){
+            if (diff > 1) {
                 throw new RuntimeException("abnormal difficulty level");
             }
         } catch (NumberFormatException e) {
             throw new RuntimeException("abnormal difficulty");
         }
 
-        if(Double.parseDouble(difficulty)< 0.7){
+        if (Double.parseDouble(difficulty) < 0.7) {
             return "Slightly difficult";
-        } else if (Double.parseDouble(difficulty)< 0.8) {
+        } else if (Double.parseDouble(difficulty) < 0.8) {
             return "normal";
-        } else if (Double.parseDouble(difficulty)< 0.9) {
+        } else if (Double.parseDouble(difficulty) < 0.9) {
             return "simple";
-        } else if (Double.parseDouble(difficulty)< 0.95) {
+        } else if (Double.parseDouble(difficulty) < 0.95) {
             return "easy";
         }
         return "so easy";
     }
 
-    public static String transformQuestionTypeToTag(String questionType){
+    public static String transformQuestionTypeToTag(String questionType) {
         try {
-            if(!(questionType.equals("0") || questionType.equals("1")
+            if (!(questionType.equals("0") || questionType.equals("1")
                     || questionType.equals("2")
-                    || questionType.equals("3") || questionType.equals("4"))){
+                    || questionType.equals("3") || questionType.equals("4"))) {
                 throw new RuntimeException("abnormal question type");
             }
         } catch (NumberFormatException e) {

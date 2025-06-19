@@ -11,6 +11,8 @@ import java.util.List;
 @Repository
 public interface QuestionRepository extends MongoRepository<Question, String> {
     List<Question> findByKnowledgePointIdsIn(List<Long> knowledgePointId);
+
     Page<Question> findByKnowledgePointIdsIn(List<Long> knowledgePointId, Pageable pageable);
+
     List<Question> findByParentId(Long parentId);
 }

@@ -8,6 +8,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
  * 综合类型
+ *
  * @TableName complexity_type
  */
 @Document("complexity_type")

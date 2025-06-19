@@ -3,14 +3,17 @@ package com.ht.bnu_tiku_backend.model.domain;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+
 import java.util.Date;
+
 import lombok.Data;
 
 /**
  * 习题修订日志
+ *
  * @TableName question_revision_log
  */
-@TableName(value ="question_revision_log")
+@TableName(value = "question_revision_log")
 @Data
 public class QuestionRevisionLog {
     /**
@@ -62,12 +65,12 @@ public class QuestionRevisionLog {
         }
         QuestionRevisionLog other = (QuestionRevisionLog) that;
         return (this.getId() == null ? other.getId() == null : this.getId().equals(other.getId()))
-            && (this.getQuestionId() == null ? other.getQuestionId() == null : this.getQuestionId().equals(other.getQuestionId()))
-            && (this.getModifiedField() == null ? other.getModifiedField() == null : this.getModifiedField().equals(other.getModifiedField()))
-            && (this.getOldValue() == null ? other.getOldValue() == null : this.getOldValue().equals(other.getOldValue()))
-            && (this.getNewValue() == null ? other.getNewValue() == null : this.getNewValue().equals(other.getNewValue()))
-            && (this.getModifiedBy() == null ? other.getModifiedBy() == null : this.getModifiedBy().equals(other.getModifiedBy()))
-            && (this.getModifiedAt() == null ? other.getModifiedAt() == null : this.getModifiedAt().equals(other.getModifiedAt()));
+                && (this.getQuestionId() == null ? other.getQuestionId() == null : this.getQuestionId().equals(other.getQuestionId()))
+                && (this.getModifiedField() == null ? other.getModifiedField() == null : this.getModifiedField().equals(other.getModifiedField()))
+                && (this.getOldValue() == null ? other.getOldValue() == null : this.getOldValue().equals(other.getOldValue()))
+                && (this.getNewValue() == null ? other.getNewValue() == null : this.getNewValue().equals(other.getNewValue()))
+                && (this.getModifiedBy() == null ? other.getModifiedBy() == null : this.getModifiedBy().equals(other.getModifiedBy()))
+                && (this.getModifiedAt() == null ? other.getModifiedAt() == null : this.getModifiedAt().equals(other.getModifiedAt()));
     }
 
     @Override

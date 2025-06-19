@@ -7,13 +7,14 @@ import lombok.Data;
 
 /**
  * 综合类型
+ *
  * @TableName complexity_type
  */
-@TableName(value ="complexity_type")
+@TableName(value = "complexity_type")
 @Data
 public class ComplexityType {
     /**
-     * 
+     *
      */
     @TableId(type = IdType.AUTO)
     private Long id;
@@ -41,8 +42,8 @@ public class ComplexityType {
         }
         ComplexityType other = (ComplexityType) that;
         return (this.getId() == null ? other.getId() == null : this.getId().equals(other.getId()))
-            && (this.getTypeName() == null ? other.getTypeName() == null : this.getTypeName().equals(other.getTypeName()))
-            && (this.getDescription() == null ? other.getDescription() == null : this.getDescription().equals(other.getDescription()));
+                && (this.getTypeName() == null ? other.getTypeName() == null : this.getTypeName().equals(other.getTypeName()))
+                && (this.getDescription() == null ? other.getDescription() == null : this.getDescription().equals(other.getDescription()));
     }
 
     @Override

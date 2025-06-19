@@ -9,6 +9,7 @@ import com.ht.bnu_tiku_backend.utils.page.PageQueryQuestionResult;
 import com.ht.bnu_tiku_backend.utils.request.QuestionCorrectRequest;
 import com.ht.bnu_tiku_backend.utils.request.QuestionSearchRequest;
 import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -27,90 +28,115 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/question")
+@Slf4j
 public class QuestionController {
     @Resource
     QuestionService questionService;
-
-    @Resource
-    MongoQuestionService mongoQuestionService;
-
     @Resource
     EsQuestionServiceImpl esQuestionService;
-
-//    @GetMapping("/search/kp/{name}")
-//    public List<Map<String, String>> searchQuestionByKnowledgePoint(@PathVariable(value = "name") String name)
-//            throws JsonProcessingException {
-//        System.out.println(name);
-//        List<Map<String, String>> maps = questionService.queryQuestionsByKnowledgePoint(name);
-//        System.out.println(maps);
-//        return maps;
-//    }
-
-//    @GetMapping("/search/kp/{name}/{pageNumber}/{pageSize}")
-//    public PageQueryQuestionResult pageSearchQuestionByKnowledgePoint(@PathVariable(value = "name") String name
-//            , @PathVariable(value = "pageNumber") Long pageNumber
-//            , @PathVariable(value = "pageSize") Long pageSize) throws JsonProcessingException {
-//        //System.out.println(pageNumber);
-//        return questionService.pageQueryQuestionsByKnowledgePoint(name, pageNumber, pageSize);
-//    }
-
-//    @GetMapping("/search/kp/{name}/{pageNumber}/{pageSize}")
-//    public PageQueryQuestionResult searchQuestionByKnowledgePoint(@PathVariable(value = "name") String name
+    /**
+     * sql知识点查题
+     * @param name
+     * @return
+     * @throws JsonProcessingException
+     */
+    public List<Map<String, String>> mySQLSearchQuestionByKnowledgePoint(@PathVariable(value = "name") String name)
+            throws JsonProcessingException {
+        log.info("知识点名：{}", name);
+        return questionService.queryQuestionsByKnowledgePoint(name);
+    }
+    /**
+     * sql知识点分页查询
+     * @param name
+     * @param pageNumber
+     * @param pageSize
+     * @return
+     * @throws JsonProcessingException
+     */
+    public PageQueryQuestionResult mySQLPageSearchQuestionByKnowledgePoint(@PathVariable(value = "name") String name
+            , @PathVariable(value = "pageNumber") Long pageNumber
+            , @PathVariable(value = "pageSize") Long pageSize) throws JsonProcessingException {
+        log.info("知识点名称：{} 页号：{} 页大小：{}", name, pageNumber, pageSize);
+        return questionService.pageQueryQuestionsByKnowledgePoint(name, pageNumber, pageSize);
+    }
+//    /**
+//     * mongo知识点分页查题
+//     * @param name
+//     * @param pageNumber
+//     * @param pageSize
+//     * @return
+//     * @throws IOException
+//     */
+//    public PageQueryQuestionResult mongoSearchQuestionByKnowledgePoint(@PathVariable(value = "name") String name
 //            , @PathVariable(value = "pageNumber") Long pageNumber
 //            , @PathVariable(value = "pageSize") Long pageSize)
 //            throws IOException {
-//        System.out.println(name);
 //
-//        return  mongoQuestionService.queryQuestionsByKnowledgePointNames(List.of(name.strip()),
+//        PageQueryQuestionResult pageQueryQuestionResult = mongoQuestionService.queryQuestionsByKnowledgePointNames(List.of(name.strip()),
 //                pageNumber,
 //                pageSize);
+//        log.info("知识点名称：{} 页号：{} 页大小：{} 按知识点查询结果：{}", name, pageNumber, pageSize, pageQueryQuestionResult);
+//        return pageQueryQuestionResult;
 //    }
+    /**
+     * elasticsearch知识点分页查题
+     * @param name
+     * @param pageNumber
+     * @param pageSize
+     * @return
+     */
     @GetMapping("/search/kp/{name}/{pageNumber}/{pageSize}")
-    public PageQueryQuestionResult searchQuestionByKnowledgePoint(@PathVariable(value = "name") String name
+    public Result<PageQueryQuestionResult> esSearchQuestionByKnowledgePoint(@PathVariable(value = "name") String name
             , @PathVariable(value = "pageNumber") Long pageNumber
-            , @PathVariable(value = "pageSize") Long pageSize)
-            throws IOException {
-        System.out.println(name);
-
-        PageQueryQuestionResult pageQueryQuestionResult = esQuestionService.queryQuestionsByKnowledgePointNames(List.of(name.strip()),
+            , @PathVariable(value = "pageSize") Long pageSize) {
+        log.info("知识点名称：{} 页号：{} 页大小：{}", name, pageNumber, pageSize);
+        return esQuestionService.queryQuestionsByKnowledgePointNames(List.of(name.strip()),
                 pageNumber,
                 pageSize);
-
-//        System.out.println(pageQueryQuestionResult);
-
-        return  pageQueryQuestionResult;
     }
-
+    /**
+     * elasticsearch关键词分页查题
+     * @param name
+     * @param pageNumber
+     * @param pageSize
+     * @return
+     * @throws IOException
+     * @author: ht
+     */
     @GetMapping("/search/keyword/{name}/{pageNumber}/{pageSize}")
-    public PageQueryQuestionResult searchQuestionByKeyword(@PathVariable(value = "name") String name
+    public PageQueryQuestionResult esSearchQuestionByKeyword(@PathVariable(value = "name") String name
             , @PathVariable(value = "pageNumber") Long pageNumber
             , @PathVariable(value = "pageSize") Long pageSize)
             throws IOException {
-
-        //System.out.println(pageQueryQuestionResult);
-        System.out.println(name);
+        log.info("知识点名称：{} 页号：{} 页大小：{}", name, pageNumber, pageSize);
         return esQuestionService.queryQuestionsByKeyword(name.strip(),
                 pageNumber,
                 pageSize);
     }
-
+    /**
+     * elasticsearch 组合条件查题
+     * @param questionSearchRequest
+     * @return
+     */
     @PostMapping("/search/combination")
-    public PageQueryQuestionResult searchQuestionByCombination(@RequestBody QuestionSearchRequest questionSearchRequest)
-    {
-        System.out.println(questionSearchRequest);
+    public Result<PageQueryQuestionResult> esSearchQuestionByCombination(@RequestBody QuestionSearchRequest questionSearchRequest) {
+        log.info("组合条件：{}", questionSearchRequest);
         return esQuestionService.searchQuestionByCombination(questionSearchRequest);
     }
-
-
+    /**
+     * 批量导出题目
+     * @param format
+     * @param ids
+     * @return
+     * @throws IOException
+     */
     @PostMapping(value = "/export")
     public ResponseEntity<InputStreamResource> export(
             @RequestParam String format,
             @RequestBody List<Long> ids) throws IOException {
-
         File file;
         String mime;
-        System.out.println(format);
-        System.out.println(ids);
+        log.info("格式：{}， 题目编号：{}", format, ids);
         if ("docx".equalsIgnoreCase(format)) {
             file = esQuestionService.generateDocx(ids);
             mime = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
@@ -122,10 +148,8 @@ public class QuestionController {
         }
         return buildFileResponse(file, mime);
     }
-
     private ResponseEntity<InputStreamResource> buildFileResponse(File file, String mime)
             throws IOException {
-
         InputStreamResource res = new InputStreamResource(new FileInputStream(file));
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
@@ -134,10 +158,13 @@ public class QuestionController {
                 .contentLength(file.length())
                 .body(res);
     }
-
+    /**
+     * 题目修改
+     * @param questionCorrectRequest
+     * @return
+     */
     @PostMapping("/correct")
-    public Result<String> correct(@RequestBody QuestionCorrectRequest questionCorrectRequest)
-    {
+    public Result<String> correct(@RequestBody QuestionCorrectRequest questionCorrectRequest) {
         return esQuestionService.questionCorrect(questionCorrectRequest);
     }
 }

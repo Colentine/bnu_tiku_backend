@@ -7,13 +7,14 @@ import lombok.Data;
 
 /**
  * 习题来源表
+ *
  * @TableName source
  */
-@TableName(value ="source")
+@TableName(value = "source")
 @Data
 public class Source {
     /**
-     * 
+     *
      */
     @TableId(type = IdType.AUTO)
     private Long id;
@@ -41,8 +42,8 @@ public class Source {
         }
         Source other = (Source) that;
         return (this.getId() == null ? other.getId() == null : this.getId().equals(other.getId()))
-            && (this.getName() == null ? other.getName() == null : this.getName().equals(other.getName()))
-            && (this.getDescription() == null ? other.getDescription() == null : this.getDescription().equals(other.getDescription()));
+                && (this.getName() == null ? other.getName() == null : this.getName().equals(other.getName()))
+                && (this.getDescription() == null ? other.getDescription() == null : this.getDescription().equals(other.getDescription()));
     }
 
     @Override

@@ -8,6 +8,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
  * 习题来源表
+ *
  * @TableName source
  */
 @Document("source")

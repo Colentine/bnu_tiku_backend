@@ -8,13 +8,14 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
  * 年级
+ *
  * @TableName grade
  */
 @Document("grade")
 @Data
 public class Grade {
     /**
-     * 
+     *
      */
     private Long id;
 

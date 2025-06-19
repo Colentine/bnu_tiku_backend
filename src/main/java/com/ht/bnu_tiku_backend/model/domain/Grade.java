@@ -7,13 +7,14 @@ import lombok.Data;
 
 /**
  * 年级
+ *
  * @TableName grade
  */
-@TableName(value ="grade")
+@TableName(value = "grade")
 @Data
 public class Grade {
     /**
-     * 
+     *
      */
     @TableId(type = IdType.AUTO)
     private Long id;
@@ -41,8 +42,8 @@ public class Grade {
         }
         Grade other = (Grade) that;
         return (this.getId() == null ? other.getId() == null : this.getId().equals(other.getId()))
-            && (this.getName() == null ? other.getName() == null : this.getName().equals(other.getName()))
-            && (this.getDescription() == null ? other.getDescription() == null : this.getDescription().equals(other.getDescription()));
+                && (this.getName() == null ? other.getName() == null : this.getName().equals(other.getName()))
+                && (this.getDescription() == null ? other.getDescription() == null : this.getDescription().equals(other.getDescription()));
     }
 
     @Override

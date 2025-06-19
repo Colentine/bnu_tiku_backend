@@ -12,4 +12,4 @@ public interface MongoQuestionService {
     List<Question> getAllQuestions();
 
     PageQueryQuestionResult queryQuestionsByKnowledgePointNames(List<String> knowledgePointNames, Long pageNumber, Long pageSize) throws IOException;
- }
+}

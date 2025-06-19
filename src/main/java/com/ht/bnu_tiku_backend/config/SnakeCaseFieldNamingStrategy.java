@@ -31,9 +31,4 @@ public class SnakeCaseFieldNamingStrategy implements FieldNamingStrategy {
 
         return result.toString();
     }
-
-//    public static void main(String[] args) {
-//        SnakeCaseFieldNamingStrategy snakeCaseFieldNamingStrategy = new SnakeCaseFieldNamingStrategy();
-//        System.out.println(snakeCaseFieldNamingStrategy.toSnakeCase("applePiePieApple"));
-//    }
 }

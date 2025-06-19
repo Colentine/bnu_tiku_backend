@@ -1,5 +1,4 @@
 package com.ht.bnu_tiku_backend.mongodb.service.impl;
-import com.google.common.collect.Lists;
 
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -19,13 +18,11 @@ import com.ht.bnu_tiku_backend.mongodb.service.MongoQuestionService;
 import com.ht.bnu_tiku_backend.utils.page.PageQueryQuestionResult;
 import jakarta.annotation.Resource;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
@@ -35,7 +32,6 @@ import java.util.stream.Collectors;
 public class MongoMongoQuestionServiceImpl implements MongoQuestionService {
     private static final Map<String, String> nameToId;
     private static final Map<String, String> idToName;
-
     static {
         ObjectMapper objectMapper = new ObjectMapper();
         String path = "KnowledgeTree/xkb_node_to_id.json";
@@ -45,7 +41,8 @@ public class MongoMongoQuestionServiceImpl implements MongoQuestionService {
             if (is == null) {
                 throw new RuntimeException("字典文件找不到：" + path + "，请确认已放到resources目录下");
             }
-            nameToId = objectMapper.readValue(is, new TypeReference<Map<String, String>>() {});
+            nameToId = objectMapper.readValue(is, new TypeReference<Map<String, String>>() {
+            });
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -53,28 +50,18 @@ public class MongoMongoQuestionServiceImpl implements MongoQuestionService {
                 .stream()
                 .collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
     }
-
-
     @Resource
     private ObjectMapper objectMapper;
-
     @Resource
     private QuestionRepository questionRepository;
-
     @Resource
     private CoreCompetencyMapper coreCompetencyMapper;
-
     @Resource
     private ComplexityTypeMapper complexityTypeMapper;
-
     @Resource
     private SourceMapper sourceMapper;
-
     @Resource
     private GradeMapper gradeMapper;
-
-
-
 
     @Override
     public void saveQuestion(Question question) {
@@ -90,16 +77,16 @@ public class MongoMongoQuestionServiceImpl implements MongoQuestionService {
     public PageQueryQuestionResult queryQuestionsByKnowledgePointNames(List<String> knowledgePointNames, Long pageNumber, Long pageSize) {
         PageQueryQuestionResult pageQueryQuestionResult = new PageQueryQuestionResult();
 
-        if(knowledgePointNames.isEmpty()){
+        if (knowledgePointNames.isEmpty()) {
             return new PageQueryQuestionResult();
         }
-        Pageable pageable = PageRequest.of(Math.toIntExact(pageNumber-1), Math.toIntExact(pageSize));
+        Pageable pageable = PageRequest.of(Math.toIntExact(pageNumber - 1), Math.toIntExact(pageSize));
         List<Question> allQuestions = new ArrayList<>();
-        if(knowledgePointNames.contains("beforeMount")){
+        if (knowledgePointNames.contains("beforeMount")) {
             Page<Question> allPages = questionRepository.findAll(pageable);
             allQuestions.addAll(allPages.getContent());
             pageQueryQuestionResult.setTotalCount(allPages.getTotalElements());
-        }else {
+        } else {
             List<Long> knowledgePointIdlist = knowledgePointNames.stream().map(key -> {
                 String knowledgePointId = nameToId.get(key);
                 if (StringUtils.isEmpty(knowledgePointId)) {
@@ -142,7 +129,7 @@ public class MongoMongoQuestionServiceImpl implements MongoQuestionService {
         Map<Long, List<Long>> knowledgePointIdMap = allQuestions
                 .stream()
                 .collect(Collectors.toMap(Question::getQuestionId, question -> {
-                    if(question.getParentId() == null){
+                    if (question.getParentId() == null) {
                         return question.getKnowledgePointIds();
                     }
                     return List.of();
@@ -150,8 +137,8 @@ public class MongoMongoQuestionServiceImpl implements MongoQuestionService {
         Map<Long, Long> maxKnowledgePointIdMap = knowledgePointIdMap
                 .entrySet()
                 .stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, e ->{
-                    if(e.getValue() == null || e.getValue().isEmpty()){
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> {
+                    if (e.getValue() == null || e.getValue().isEmpty()) {
                         return 0L;
                     }
                     return Collections.max(e.getValue());
@@ -159,7 +146,7 @@ public class MongoMongoQuestionServiceImpl implements MongoQuestionService {
 
         List<Map<String, String>> queryResult = new ArrayList<>();
         allQuestions.forEach(question -> {
-            if(question.getParentId() != null){
+            if (question.getParentId() != null) {
                 return;
             }
             HashMap<String, String> questionMap = new HashMap<>();
@@ -171,10 +158,10 @@ public class MongoMongoQuestionServiceImpl implements MongoQuestionService {
                     gradeMap,
                     sourceMap,
                     maxKnowledgePointIdMap);
-            if(question.getQuestionType().equals(0)) {
+            if (question.getQuestionType().equals(0)) {
                 questionMap.put("stem", stemText.toString());
                 insertBlockTextIntoResult(question, questionMap);
-            }else{
+            } else {
                 questionMap.put("composite_question_stem", stemText.toString());
                 ArrayList<HashMap<String, String>> subQuestionMaps = new ArrayList<>();
                 questionRepository.findByParentId(question.getQuestionId()).forEach(subQuestion -> {
@@ -195,7 +182,7 @@ public class MongoMongoQuestionServiceImpl implements MongoQuestionService {
                 });
                 StringBuilder subQuestionString = new StringBuilder();
                 try {
-                     subQuestionString.append(objectMapper.writeValueAsString(subQuestionMaps));
+                    subQuestionString.append(objectMapper.writeValueAsString(subQuestionMaps));
                 } catch (JsonProcessingException e) {
                     throw new RuntimeException(e);
                 }
@@ -266,7 +253,7 @@ public class MongoMongoQuestionServiceImpl implements MongoQuestionService {
 
         Analysis analysis = question.getExplanationBlock().getAnalysis();
         StringBuilder analysisText = new StringBuilder();
-        if(analysis != null) {
+        if (analysis != null) {
             analysisText.append(analysis.getText());
             insertImageUrlIntoText(analysis, analysisText);
         }
@@ -285,11 +272,11 @@ public class MongoMongoQuestionServiceImpl implements MongoQuestionService {
     }
 
     private void insertImageUrlIntoText(QuestionBlock block, StringBuilder text) {
-        if(text.isEmpty()){
+        if (text.isEmpty()) {
             return;
         }
         List<Image> images = block.getImages();
-        if(images != null && !images.isEmpty()){
+        if (images != null && !images.isEmpty()) {
             images.forEach(image -> {
                 text.insert(Math.toIntExact(image.getPosition()), image.getUrl());
             });

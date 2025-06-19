@@ -17,7 +17,6 @@ import java.util.List;
 @Data
 @Document(indexName = "question")
 public class Question {
-
     @Id
     @Field(name = "question_id", type = FieldType.Long)
     private Long questionId;

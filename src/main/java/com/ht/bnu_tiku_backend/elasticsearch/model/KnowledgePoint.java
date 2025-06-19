@@ -14,12 +14,12 @@ public class KnowledgePoint {
     @Field(type = FieldType.Text)
     String name;
 
-    @Field(name="parent_id", type = FieldType.Long)
+    @Field(name = "parent_id", type = FieldType.Long)
     Long parentId;
 
-    @Field(name="name_initials", type = FieldType.Text)
+    @Field(name = "name_initials", type = FieldType.Text)
     String nameInitials;
 
-    @Field(name="description", type = FieldType.Text)
+    @Field(name = "description", type = FieldType.Text)
     String description;
 }
