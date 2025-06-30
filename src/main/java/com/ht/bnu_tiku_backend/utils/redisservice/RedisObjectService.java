@@ -12,6 +12,10 @@ public class RedisObjectService {
     @Resource
     private RedisTemplate<String, Object> redisTemplate;
 
+    public <T> void set(String key, T value) {
+        redisTemplate.opsForValue().set(key, value);
+    }
+
     public <T> void set(String key, T value, long timeout, TimeUnit unit) {
         redisTemplate.opsForValue().set(key, value, timeout, unit);
     }

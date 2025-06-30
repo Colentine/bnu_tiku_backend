@@ -2,7 +2,6 @@ package com.ht.bnu_tiku_backend.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.ht.bnu_tiku_backend.elasticsearch.service.impl.EsQuestionServiceImpl;
-import com.ht.bnu_tiku_backend.mongodb.service.MongoQuestionService;
 import com.ht.bnu_tiku_backend.service.QuestionService;
 import com.ht.bnu_tiku_backend.utils.ResponseResult.Result;
 import com.ht.bnu_tiku_backend.utils.page.PageQueryQuestionResult;
@@ -34,8 +33,10 @@ public class QuestionController {
     QuestionService questionService;
     @Resource
     EsQuestionServiceImpl esQuestionService;
+
     /**
      * sql知识点查题
+     *
      * @param name
      * @return
      * @throws JsonProcessingException
@@ -45,8 +46,10 @@ public class QuestionController {
         log.info("知识点名：{}", name);
         return questionService.queryQuestionsByKnowledgePoint(name);
     }
+
     /**
      * sql知识点分页查询
+     *
      * @param name
      * @param pageNumber
      * @param pageSize
@@ -78,8 +81,10 @@ public class QuestionController {
 //        log.info("知识点名称：{} 页号：{} 页大小：{} 按知识点查询结果：{}", name, pageNumber, pageSize, pageQueryQuestionResult);
 //        return pageQueryQuestionResult;
 //    }
+
     /**
      * elasticsearch知识点分页查题
+     *
      * @param name
      * @param pageNumber
      * @param pageSize
@@ -94,8 +99,10 @@ public class QuestionController {
                 pageNumber,
                 pageSize);
     }
+
     /**
      * elasticsearch关键词分页查题
+     *
      * @param name
      * @param pageNumber
      * @param pageSize
@@ -113,8 +120,10 @@ public class QuestionController {
                 pageNumber,
                 pageSize);
     }
+
     /**
      * elasticsearch 组合条件查题
+     *
      * @param questionSearchRequest
      * @return
      */
@@ -123,8 +132,10 @@ public class QuestionController {
         log.info("组合条件：{}", questionSearchRequest);
         return esQuestionService.searchQuestionByCombination(questionSearchRequest);
     }
+
     /**
      * 批量导出题目
+     *
      * @param format
      * @param ids
      * @return
@@ -148,6 +159,7 @@ public class QuestionController {
         }
         return buildFileResponse(file, mime);
     }
+
     private ResponseEntity<InputStreamResource> buildFileResponse(File file, String mime)
             throws IOException {
         InputStreamResource res = new InputStreamResource(new FileInputStream(file));
@@ -158,8 +170,10 @@ public class QuestionController {
                 .contentLength(file.length())
                 .body(res);
     }
+
     /**
      * 题目修改
+     *
      * @param questionCorrectRequest
      * @return
      */

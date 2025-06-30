@@ -5,11 +5,12 @@
 <mapper namespace="com.ht.bnu_tiku_backend.mapper.SchoolMapper">
 
     <resultMap id="BaseResultMap" type="com.ht.bnu_tiku_backend.model.domain.School">
-            <id property="id" column="id" />
-            <result property="schoolName" column="school_name" />
+        <id property="id" column="id"/>
+        <result property="schoolName" column="school_name"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,school_name
+        id
+        ,school_name
     </sql>
 </mapper>

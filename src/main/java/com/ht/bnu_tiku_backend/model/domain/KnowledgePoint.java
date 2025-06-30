@@ -2,11 +2,10 @@ package com.ht.bnu_tiku_backend.model.domain;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Data;
 
 import java.io.Serializable;
 import java.util.Date;
-
-import lombok.Data;
 
 /**
  * 知识点

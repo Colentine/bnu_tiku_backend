@@ -3,12 +3,11 @@ package com.ht.bnu_tiku_backend.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.lang.Validator;
 import cn.hutool.core.util.IdUtil;
-import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
-import cn.hutool.json.JSONArray;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.ht.bnu_tiku_backend.mapper.UserMapper;
 import com.ht.bnu_tiku_backend.model.domain.User;
 import com.ht.bnu_tiku_backend.service.UserService;
 import com.ht.bnu_tiku_backend.utils.DTO.LoginResultDTO;
@@ -19,21 +18,21 @@ import com.ht.bnu_tiku_backend.utils.redisservice.RedisObjectService;
 import com.ht.bnu_tiku_backend.utils.request.UserLoginRequest;
 import com.ht.bnu_tiku_backend.utils.request.UserRegisterRequest;
 import jakarta.annotation.Resource;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import com.ht.bnu_tiku_backend.mapper.UserMapper;
 
 import java.util.concurrent.TimeUnit;
 
 
 /**
-* @author huangtao
-* @description 针对表【user(用户表)】的数据库操作Service实现
-* @createDate 2025-05-13 13:58:00
-*/
+ * @author huangtao
+ * @description 针对表【user(用户表)】的数据库操作Service实现
+ * @createDate 2025-05-13 13:58:00
+ */
 @Service
+@Slf4j
 public class UserServiceImpl extends ServiceImpl<UserMapper, User>
-    implements UserService {
+        implements UserService {
 
     @Resource
     private RedisObjectService redisObjectService;
@@ -49,19 +48,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
 
         if (param.getUserPassword().length() < 4) {
-            throw new RuntimeException("密码过短");
+            throw new IllegalArgumentException("密码过短");
         }
 
         if (param.getUserPassword().length() > 100) {
-            throw new RuntimeException("密码过长");
+            throw new IllegalArgumentException("密码过长");
         }
 
-        if (param.getUserName().length() > 100){
-            throw new RuntimeException("账号过长");
+        if (param.getUserName().length() > 100) {
+            throw new IllegalArgumentException("账号过长");
         }
 
         if (param.getUserName().length() < 2) {
-            throw new RuntimeException("账号过短");
+            throw new IllegalArgumentException("账号过短");
         }
 
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
@@ -85,9 +84,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         // 5. 脱敏后构建 DTO（Hutool BeanUtil 超简洁）
         UserDTO userDTO = BeanUtil.copyProperties(user, UserDTO.class);
 
+        UserHolder.setUser(userDTO);
+        log.info(UserHolder.getUser().toString());
         // 6. 存入 Redis（30分钟有效期）
         String redisKey = "login:token:" + token;
-        redisObjectService.set(redisKey, userDTO, 30, TimeUnit.MINUTES);
+        redisObjectService.set(redisKey, userDTO, 30, TimeUnit.DAYS);
 
         // 7. 构造返回结果
         LoginResultDTO resloginResultDTO = new LoginResultDTO();
@@ -127,7 +128,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
         String userAccount = String.valueOf(userMapper.selectCount(null) + 1L);
 
-        if(userAccount.length() < 6){
+        if (userAccount.length() < 6) {
             userAccount = StrUtil.padPre(userAccount, 6, "0");
         }
 

@@ -1,12 +1,5 @@
 package com.ht.bnu_tiku_backend.utils.Helper;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.ht.bnu_tiku_backend.model.domain.QuestionAnswerBlock;
-import com.ht.bnu_tiku_backend.model.domain.QuestionExplanationBlock;
-import com.ht.bnu_tiku_backend.model.domain.QuestionKnowledge;
-import com.ht.bnu_tiku_backend.model.domain.QuestionStemBlock;
-
 //import java.util.List;
 //
 public class QueryHelper {

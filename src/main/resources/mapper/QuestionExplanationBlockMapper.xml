@@ -5,20 +5,21 @@
 <mapper namespace="com.ht.bnu_tiku_backend.mapper.QuestionExplanationBlockMapper">
 
     <resultMap id="BaseResultMap" type="com.ht.bnu_tiku_backend.model.domain.QuestionExplanationBlock">
-            <id property="id" column="id" />
-            <result property="questionId" column="question_id" />
-            <result property="explanationType" column="explanation_type" />
-            <result property="contentType" column="content_type" />
-            <result property="imageFileId" column="image_file_id" />
-            <result property="explanationText" column="explanation_text" />
-            <result property="interactiveIndex" column="interactive_index" />
-            <result property="position" column="position" />
-            <result property="createdAt" column="created_at" />
-            <result property="updatedAt" column="updated_at" />
+        <id property="id" column="id"/>
+        <result property="questionId" column="question_id"/>
+        <result property="explanationType" column="explanation_type"/>
+        <result property="contentType" column="content_type"/>
+        <result property="imageFileId" column="image_file_id"/>
+        <result property="explanationText" column="explanation_text"/>
+        <result property="interactiveIndex" column="interactive_index"/>
+        <result property="position" column="position"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,question_id,explanation_type,content_type,image_file_id,explanation_text,
+        id
+        ,question_id,explanation_type,content_type,image_file_id,explanation_text,
         interactive_index,position,created_at,updated_at
     </sql>
 </mapper>

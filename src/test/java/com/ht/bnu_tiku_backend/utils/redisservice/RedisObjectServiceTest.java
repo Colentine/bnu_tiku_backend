@@ -1,17 +1,14 @@
 package com.ht.bnu_tiku_backend.utils.redisservice;
 
-import java.util.Date;
-import java.util.concurrent.TimeUnit;
-
 import com.ht.bnu_tiku_backend.model.domain.Question;
 import jakarta.annotation.Resource;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import static org.junit.jupiter.api.Assertions.*;
+import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest

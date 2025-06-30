@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 public class MongoMongoQuestionServiceImpl implements MongoQuestionService {
     private static final Map<String, String> nameToId;
     private static final Map<String, String> idToName;
+
     static {
         ObjectMapper objectMapper = new ObjectMapper();
         String path = "KnowledgeTree/xkb_node_to_id.json";
@@ -50,6 +51,7 @@ public class MongoMongoQuestionServiceImpl implements MongoQuestionService {
                 .stream()
                 .collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
     }
+
     @Resource
     private ObjectMapper objectMapper;
     @Resource

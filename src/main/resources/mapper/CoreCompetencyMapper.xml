@@ -5,12 +5,13 @@
 <mapper namespace="com.ht.bnu_tiku_backend.mapper.CoreCompetencyMapper">
 
     <resultMap id="BaseResultMap" type="com.ht.bnu_tiku_backend.model.domain.CoreCompetency">
-            <id property="id" column="id" />
-            <result property="competencyName" column="competency_name" />
-            <result property="description" column="description" />
+        <id property="id" column="id"/>
+        <result property="competencyName" column="competency_name"/>
+        <result property="description" column="description"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,competency_name,description
+        id
+        ,competency_name,description
     </sql>
 </mapper>

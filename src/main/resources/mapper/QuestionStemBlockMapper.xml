@@ -5,18 +5,19 @@
 <mapper namespace="com.ht.bnu_tiku_backend.mapper.QuestionStemBlockMapper">
 
     <resultMap id="BaseResultMap" type="com.ht.bnu_tiku_backend.model.domain.QuestionStemBlock">
-            <id property="id" column="id" />
-            <result property="questionId" column="question_id" />
-            <result property="contentType" column="content_type" />
-            <result property="textContent" column="text_content" />
-            <result property="imageFileId" column="image_file_id" />
-            <result property="position" column="position" />
-            <result property="createdAt" column="created_at" />
-            <result property="updatedAt" column="updated_at" />
+        <id property="id" column="id"/>
+        <result property="questionId" column="question_id"/>
+        <result property="contentType" column="content_type"/>
+        <result property="textContent" column="text_content"/>
+        <result property="imageFileId" column="image_file_id"/>
+        <result property="position" column="position"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,question_id,content_type,text_content,image_file_id,position,
+        id
+        ,question_id,content_type,text_content,image_file_id,position,
         created_at,updated_at
     </sql>
 </mapper>

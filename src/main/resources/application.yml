@@ -3,6 +3,8 @@ server:
   servlet:
     context-path: /api
 spring:
+#  main:
+#    allow-bean-definition-overriding: true
   application:
     name: bnu_tiku_backend
   profiles:

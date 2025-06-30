@@ -5,23 +5,24 @@
 <mapper namespace="com.ht.bnu_tiku_backend.mapper.QuestionMapper">
 
     <resultMap id="BaseResultMap" type="com.ht.bnu_tiku_backend.model.domain.Question">
-            <id property="id" column="id" />
-            <result property="parentId" column="parent_id" />
-            <result property="questionType" column="question_type" />
-            <result property="simpleQuestionType" column="simple_question_type" />
-            <result property="subject" column="subject" />
-            <result property="gradeId" column="grade_id" />
-            <result property="sourceId" column="source_id" />
-            <result property="difficulty" column="difficulty" />
-            <result property="complexityTypeId" column="complexity_type_id" />
-            <result property="coreCompetencyId" column="core_competency_id" />
-            <result property="createdBy" column="created_by" />
-            <result property="createdAt" column="created_at" />
-            <result property="updatedAt" column="updated_at" />
+        <id property="id" column="id"/>
+        <result property="parentId" column="parent_id"/>
+        <result property="questionType" column="question_type"/>
+        <result property="simpleQuestionType" column="simple_question_type"/>
+        <result property="subject" column="subject"/>
+        <result property="gradeId" column="grade_id"/>
+        <result property="sourceId" column="source_id"/>
+        <result property="difficulty" column="difficulty"/>
+        <result property="complexityTypeId" column="complexity_type_id"/>
+        <result property="coreCompetencyId" column="core_competency_id"/>
+        <result property="createdBy" column="created_by"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,parent_id,question_type,simple_question_type,subject,grade_id,
+        id
+        ,parent_id,question_type,simple_question_type,subject,grade_id,
         source_id,difficulty,complexity_type_id,core_competency_id,created_by,
         created_at,updated_at
     </sql>

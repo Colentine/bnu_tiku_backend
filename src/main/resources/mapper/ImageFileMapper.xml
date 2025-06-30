@@ -5,13 +5,14 @@
 <mapper namespace="com.ht.bnu_tiku_backend.mapper.ImageFileMapper">
 
     <resultMap id="BaseResultMap" type="com.ht.bnu_tiku_backend.model.domain.ImageFile">
-            <id property="id" column="id" />
-            <result property="imageUrl" column="image_url" />
-            <result property="uploadedBy" column="uploaded_by" />
-            <result property="uploadedAt" column="uploaded_at" />
+        <id property="id" column="id"/>
+        <result property="imageUrl" column="image_url"/>
+        <result property="uploadedBy" column="uploaded_by"/>
+        <result property="uploadedAt" column="uploaded_at"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,image_url,uploaded_by,uploaded_at
+        id
+        ,image_url,uploaded_by,uploaded_at
     </sql>
 </mapper>

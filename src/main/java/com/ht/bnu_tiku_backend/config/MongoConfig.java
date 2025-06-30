@@ -2,10 +2,7 @@ package com.ht.bnu_tiku_backend.config;
 
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
-import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.actuate.autoconfigure.wavefront.WavefrontProperties;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mapping.model.FieldNamingStrategy;

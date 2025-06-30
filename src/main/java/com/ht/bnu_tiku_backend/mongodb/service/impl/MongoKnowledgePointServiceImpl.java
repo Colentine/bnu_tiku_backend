@@ -3,15 +3,11 @@ package com.ht.bnu_tiku_backend.mongodb.service.impl;
 import com.ht.bnu_tiku_backend.mongodb.model.KnowledgePoint;
 import com.ht.bnu_tiku_backend.mongodb.repository.KnowledgePointRepository;
 import com.ht.bnu_tiku_backend.mongodb.service.MongoKnowledgePointService;
-import com.ht.bnu_tiku_backend.utils.PinYinTool;
 import jakarta.annotation.Resource;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

@@ -2,7 +2,6 @@ package com.ht.bnu_tiku_backend.mongodb.service.impl;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ht.bnu_tiku_backend.config.MongoConfig;
 import com.ht.bnu_tiku_backend.mongodb.model.KnowledgePoint;
 import com.ht.bnu_tiku_backend.utils.PinYinTool;
 import jakarta.annotation.Resource;
@@ -17,10 +16,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.ref.Reference;
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest

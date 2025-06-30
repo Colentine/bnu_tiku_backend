@@ -1,21 +1,19 @@
 package com.ht.bnu_tiku_backend.model.mongodb.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Lists;
 import com.ht.bnu_tiku_backend.mapper.ComplexityTypeMapper;
 import com.ht.bnu_tiku_backend.mapper.CoreCompetencyMapper;
 import com.ht.bnu_tiku_backend.mapper.GradeMapper;
 import com.ht.bnu_tiku_backend.mapper.SourceMapper;
 import com.ht.bnu_tiku_backend.model.domain.ComplexityType;
+import com.ht.bnu_tiku_backend.model.domain.CoreCompetency;
 import com.ht.bnu_tiku_backend.model.domain.Grade;
 import com.ht.bnu_tiku_backend.model.domain.Source;
-import com.ht.bnu_tiku_backend.model.domain.CoreCompetency;
 import com.ht.bnu_tiku_backend.mongodb.model.*;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.common.collect.Lists;
-
-import com.ht.bnu_tiku_backend.mongodb.model.Question;
 import com.ht.bnu_tiku_backend.mongodb.service.MongoUserService;
 import com.ht.bnu_tiku_backend.mongodb.service.impl.MongoMongoQuestionServiceImpl;
 import com.ht.bnu_tiku_backend.service.QuestionService;
@@ -28,7 +26,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest

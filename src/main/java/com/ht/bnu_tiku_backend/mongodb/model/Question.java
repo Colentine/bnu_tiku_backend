@@ -1,7 +1,8 @@
 package com.ht.bnu_tiku_backend.mongodb.model;
 
 import lombok.Data;
-import org.springframework.data.annotation.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.List;

@@ -4,8 +4,9 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Lists;
+import com.ht.bnu_tiku_backend.elasticsearch.model.Question;
 import com.ht.bnu_tiku_backend.elasticsearch.repository.EsQuestionRepository;
-import com.ht.bnu_tiku_backend.elasticsearch.service.EsQuestionService;
 import com.ht.bnu_tiku_backend.mapper.ComplexityTypeMapper;
 import com.ht.bnu_tiku_backend.mapper.CoreCompetencyMapper;
 import com.ht.bnu_tiku_backend.mapper.GradeMapper;
@@ -14,25 +15,11 @@ import com.ht.bnu_tiku_backend.model.domain.ComplexityType;
 import com.ht.bnu_tiku_backend.model.domain.CoreCompetency;
 import com.ht.bnu_tiku_backend.model.domain.Grade;
 import com.ht.bnu_tiku_backend.model.domain.Source;
+import com.ht.bnu_tiku_backend.mongodb.model.AnswerBlock;
 import com.ht.bnu_tiku_backend.mongodb.model.Explanation;
 import com.ht.bnu_tiku_backend.mongodb.model.ExplanationBlock;
-import com.google.common.collect.Lists;
-
-import java.io.ByteArrayOutputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 import com.ht.bnu_tiku_backend.mongodb.model.StemBlock;
-import com.ht.bnu_tiku_backend.mongodb.model.AnswerBlock;
-
-import com.ht.bnu_tiku_backend.elasticsearch.model.Question;
 import com.ht.bnu_tiku_backend.service.QuestionService;
-import com.ht.bnu_tiku_backend.utils.WordUtils;
 import com.ht.bnu_tiku_backend.utils.request.QuestionSearchRequest;
 import com.latextoword.Latex_Word;
 import jakarta.annotation.Resource;
@@ -43,10 +30,12 @@ import org.junit.platform.commons.util.StringUtils;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import static org.junit.jupiter.api.Assertions.*;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest

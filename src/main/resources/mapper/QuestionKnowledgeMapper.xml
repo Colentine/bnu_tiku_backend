@@ -5,12 +5,13 @@
 <mapper namespace="com.ht.bnu_tiku_backend.mapper.QuestionKnowledgeMapper">
 
     <resultMap id="BaseResultMap" type="com.ht.bnu_tiku_backend.model.domain.QuestionKnowledge">
-            <id property="id" column="id" />
-            <result property="questionId" column="question_id" />
-            <result property="knowledgePointId" column="knowledge_point_id" />
+        <id property="id" column="id"/>
+        <result property="questionId" column="question_id"/>
+        <result property="knowledgePointId" column="knowledge_point_id"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,question_id,knowledge_point_id
+        id
+        ,question_id,knowledge_point_id
     </sql>
 </mapper>

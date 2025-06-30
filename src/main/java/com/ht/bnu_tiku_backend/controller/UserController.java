@@ -8,16 +8,19 @@ import com.ht.bnu_tiku_backend.utils.UserHolder;
 import com.ht.bnu_tiku_backend.utils.request.UserLoginRequest;
 import com.ht.bnu_tiku_backend.utils.request.UserRegisterRequest;
 import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/user")
+@Slf4j
 public class UserController {
     @Resource
     private UserService userService;
 
     /**
      * 用户登录
+     *
      * @param userLoginRequest
      * @return
      */
@@ -28,6 +31,7 @@ public class UserController {
 
     /**
      * 用户注册
+     *
      * @param userRegisterRequest
      * @return
      */
@@ -38,10 +42,13 @@ public class UserController {
 
     /**
      * 获取用户登录态
+     *
      * @return
      */
     @GetMapping("/current")
     public Result<UserDTO> currentUser() {
-        return Result.ok(UserHolder.getUser());
+        UserDTO user = UserHolder.getUser();
+        log.info(user.toString());
+        return Result.ok(user);
     }
 }

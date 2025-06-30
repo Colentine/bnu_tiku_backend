@@ -1,10 +1,9 @@
 package com.ht.bnu_tiku_backend.model.domain;
 
 import com.baomidou.mybatisplus.annotation.*;
+import lombok.Data;
 
 import java.util.Date;
-
-import lombok.Data;
 
 /**
  * 用户表

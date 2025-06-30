@@ -5,17 +5,18 @@
 <mapper namespace="com.ht.bnu_tiku_backend.mapper.QuestionRevisionLogMapper">
 
     <resultMap id="BaseResultMap" type="com.ht.bnu_tiku_backend.model.domain.QuestionRevisionLog">
-            <id property="id" column="id" />
-            <result property="questionId" column="question_id" />
-            <result property="modifiedField" column="modified_field" />
-            <result property="oldValue" column="old_value" />
-            <result property="newValue" column="new_value" />
-            <result property="modifiedBy" column="modified_by" />
-            <result property="modifiedAt" column="modified_at" />
+        <id property="id" column="id"/>
+        <result property="questionId" column="question_id"/>
+        <result property="modifiedField" column="modified_field"/>
+        <result property="oldValue" column="old_value"/>
+        <result property="newValue" column="new_value"/>
+        <result property="modifiedBy" column="modified_by"/>
+        <result property="modifiedAt" column="modified_at"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,question_id,modified_field,old_value,new_value,modified_by,
+        id
+        ,question_id,modified_field,old_value,new_value,modified_by,
         modified_at
     </sql>
 </mapper>

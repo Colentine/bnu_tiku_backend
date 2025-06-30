@@ -5,19 +5,20 @@
 <mapper namespace="com.ht.bnu_tiku_backend.mapper.QuestionAnswerBlockMapper">
 
     <resultMap id="BaseResultMap" type="com.ht.bnu_tiku_backend.model.domain.QuestionAnswerBlock">
-            <id property="id" column="id" />
-            <result property="questionId" column="question_id" />
-            <result property="contentType" column="content_type" />
-            <result property="imageFileId" column="image_file_id" />
-            <result property="interactiveIndex" column="interactive_index" />
-            <result property="answerText" column="answer_text" />
-            <result property="position" column="position" />
-            <result property="createdAt" column="created_at" />
-            <result property="updatedAt" column="updated_at" />
+        <id property="id" column="id"/>
+        <result property="questionId" column="question_id"/>
+        <result property="contentType" column="content_type"/>
+        <result property="imageFileId" column="image_file_id"/>
+        <result property="interactiveIndex" column="interactive_index"/>
+        <result property="answerText" column="answer_text"/>
+        <result property="position" column="position"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,question_id,content_type,image_file_id,interactive_index,answer_text,
+        id
+        ,question_id,content_type,image_file_id,interactive_index,answer_text,
         position,created_at,updated_at
     </sql>
 </mapper>

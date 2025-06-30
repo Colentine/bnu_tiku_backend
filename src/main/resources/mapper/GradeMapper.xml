@@ -5,12 +5,13 @@
 <mapper namespace="com.ht.bnu_tiku_backend.mapper.GradeMapper">
 
     <resultMap id="BaseResultMap" type="com.ht.bnu_tiku_backend.model.domain.Grade">
-            <id property="id" column="id" />
-            <result property="name" column="name" />
-            <result property="description" column="description" />
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="description" column="description"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,name,description
+        id
+        ,name,description
     </sql>
 </mapper>

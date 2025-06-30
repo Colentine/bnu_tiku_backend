@@ -6,19 +6,18 @@ import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ht.bnu_tiku_backend.elasticsearch.model.*;
+import com.ht.bnu_tiku_backend.elasticsearch.model.ComplexityType;
+import com.ht.bnu_tiku_backend.elasticsearch.model.CoreCompetency;
+import com.ht.bnu_tiku_backend.elasticsearch.model.Grade;
 import com.ht.bnu_tiku_backend.elasticsearch.model.Question;
-import com.ht.bnu_tiku_backend.elasticsearch.repository.EsQuestionRepository;
+import com.ht.bnu_tiku_backend.elasticsearch.model.Source;
+import com.ht.bnu_tiku_backend.elasticsearch.repository.*;
 import com.ht.bnu_tiku_backend.elasticsearch.service.EsQuestionService;
 import com.ht.bnu_tiku_backend.mapper.*;
 import com.ht.bnu_tiku_backend.model.domain.*;
-import com.ht.bnu_tiku_backend.model.domain.ComplexityType;
-import com.ht.bnu_tiku_backend.model.domain.CoreCompetency;
-import com.ht.bnu_tiku_backend.model.domain.Grade;
-import com.ht.bnu_tiku_backend.model.domain.Source;
 import com.ht.bnu_tiku_backend.mongodb.model.*;
-import com.ht.bnu_tiku_backend.mongodb.model.Image;
 import com.ht.bnu_tiku_backend.utils.ResponseResult.Result;
-import com.ht.bnu_tiku_backend.utils.ResultCode;
 import com.ht.bnu_tiku_backend.utils.page.PageQueryQuestionResult;
 import com.ht.bnu_tiku_backend.utils.request.CorrectTags;
 import com.ht.bnu_tiku_backend.utils.request.QuestionCorrectRequest;
@@ -38,6 +37,7 @@ import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
 import org.apache.xmlbeans.XmlObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -57,7 +57,6 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URL;
 import java.util.*;
-import java.util.List;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -70,8 +69,9 @@ public class EsQuestionServiceImpl implements EsQuestionService {
     public static final Map<String, String> idToName;
     private static final String NS =
             "http://schemas.openxmlformats.org/officeDocument/2006/math";
-    private static final String NS_W = 
+    private static final String NS_W =
             "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+
     static {
         ObjectMapper objectMapper = new ObjectMapper();
         String path = "KnowledgeTree/xkb_node_to_id.json";
@@ -91,23 +91,65 @@ public class EsQuestionServiceImpl implements EsQuestionService {
                 .collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
     }
     @Resource
-    private CoreCompetencyMapper coreCompetencyMapper;
-    @Resource
-    private ComplexityTypeMapper complexityTypeMapper;
-    @Resource
-    private SourceMapper sourceMapper;
-    @Resource
-    private GradeMapper gradeMapper;
-    @Resource
     private ObjectMapper objectMapper;
     @Resource
     private EsQuestionRepository esQuestionRepository;
     @Resource
     private ElasticsearchTemplate elasticsearchTemplate;
     @Resource
-    private QuestionMapper questionMapper;
-    @Resource
     private QuestionRevisionLogMapper questionRevisionLogMapper;
+    @Resource
+    private EsCoreCompetencyRepository esCoreCompetencyRepository;
+    @Resource
+    private EsComplexityTypeRepository esComplexityTypeRepository;
+    @Resource
+    private EsSourceRepository esSourceRepository;
+    @Resource
+    private EsGradeRepository esGradeRepository;
+
+    private static void flushOmmlToParagraph(XWPFParagraph para, StringBuilder sb) {
+        System.out.println(sb.toString());
+        if (sb.isEmpty()) return;
+
+        try {
+            XmlObject mathPara = XmlObject.Factory.parse(sb.toString());
+            para.getCTP().addNewOMathPara().set(mathPara);
+        } catch (Exception e) {
+            throw new RuntimeException("OMML 解析失败", e);
+        }
+    }
+
+    public static BufferedImage convertSvgToPng(String svgUrl) throws Exception {
+        URL url = new URL(svgUrl);
+        InputStream inputStream = url.openStream();
+        TranscoderInput input = new TranscoderInput(inputStream);
+        //  PNG 转化对象
+        PNGTranscoder transcoder = new PNGTranscoder();
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        TranscoderOutput output = new TranscoderOutput(outputStream);
+        // svg转png
+        transcoder.transcode(input, output);
+        // png字节数据
+        byte[] pngBytes = outputStream.toByteArray();
+        BufferedImage image = ImageIO.read(new ByteArrayInputStream(pngBytes));
+        outputStream.close();
+        inputStream.close();
+        return image;
+    }
+
+    public static void appendOmmlToParagraph(XWPFParagraph para, String omml) throws Exception {
+        // 1. 解析 OMML 字符串
+        String ommlXml = Latex_Word.latexToWord(omml);
+        if (!ommlXml.contains("xmlns:m=")) {
+            ommlXml = ommlXml.replaceFirst(
+                    "<m:oMath(.*?)>",
+                    "<m:oMath$1 xmlns:m=\"http://schemas.openxmlformats.org/officeDocument/2006/math\">"
+            );
+        }
+        XmlObject xmlObj = XmlObject.Factory.parse(ommlXml);
+        // ↓ 这里 cast 成 CTOMath
+        para.getCTP().addNewOMath().set(xmlObj);
+    }
 
     @Override
     public void saveQuestion(Question question) {
@@ -176,22 +218,22 @@ public class EsQuestionServiceImpl implements EsQuestionService {
         // 1.1 查询核心素养
         long startTime = System.currentTimeMillis();
         List<Long> coreCompetencyIds = allQuestions.stream().map(Question::getCoreCompetencyId).toList();
-        Map<Long, CoreCompetency> coreCompetencyMap = coreCompetencyMapper.selectBatchIds(coreCompetencyIds)
+        Map<Long, CoreCompetency> coreCompetencyMap = esCoreCompetencyRepository.findCoreCompetenciesByIdIsIn(coreCompetencyIds)
                 .stream()
                 .collect(Collectors.toMap(CoreCompetency::getId, c -> c));
         // 1.2 查询综合类型
         List<Long> complexityTypeIds = allQuestions.stream().map(Question::getComplexityId).toList();
-        Map<Long, ComplexityType> complexityTypeMap = complexityTypeMapper.selectBatchIds(complexityTypeIds)
+        Map<Long, ComplexityType> complexityTypeMap = esComplexityTypeRepository.findComplexityTypesByIdIsIn(complexityTypeIds)
                 .stream()
                 .collect(Collectors.toMap(ComplexityType::getId, c -> c));
         // 1.3 查询来源
         List<Long> sourceIds = allQuestions.stream().map(Question::getSourceId).toList();
-        Map<Long, Source> sourceMap = sourceMapper.selectBatchIds(sourceIds)
+        Map<Long, Source> sourceMap = esSourceRepository.findSourcesByIdIsIn(sourceIds)
                 .stream()
                 .collect(Collectors.toMap(Source::getId, c -> c));
         // 1.4 查询年级
         List<Integer> gradeIds = allQuestions.stream().map(Question::getGradeId).toList();
-        Map<Long, Grade> gradeMap = gradeMapper.selectBatchIds(gradeIds)
+        Map<Long, com.ht.bnu_tiku_backend.elasticsearch.model.Grade> gradeMap = esGradeRepository.findGradesByIdIsIn(gradeIds)
                 .stream()
                 .collect(Collectors.toMap(Grade::getId, g -> g));
         // 1.5 查询知识点
@@ -203,7 +245,7 @@ public class EsQuestionServiceImpl implements EsQuestionService {
                     }
                     return List.of();
                 }));
-        // 1.6 查询核心素养
+        // 1.6 查询关联知识点
         Map<Long, Long> maxKnowledgePointIdMap = knowledgePointIdsMap
                 .entrySet()
                 .stream()
@@ -408,7 +450,7 @@ public class EsQuestionServiceImpl implements EsQuestionService {
 
                 /* ---------- LaTeX 公式 ---------- */
                 if (part instanceof OmmlWrapper ow) {
-                    ensureOpen.accept(null);               
+                    ensureOpen.accept(null);
                     String omml = StringEscapeUtils.unescapeXml(ow.getOmml())
                             .replaceAll("<m:oMathPara[^>]*>|</m:oMathPara>", "");
                     if (!omml.contains("xmlns:m"))
@@ -473,18 +515,6 @@ public class EsQuestionServiceImpl implements EsQuestionService {
         return out;
     }
 
-    private static void flushOmmlToParagraph(XWPFParagraph para, StringBuilder sb) {
-        System.out.println(sb.toString());
-        if (sb.isEmpty()) return;
-
-        try {
-            XmlObject mathPara = XmlObject.Factory.parse(sb.toString());
-            para.getCTP().addNewOMathPara().set(mathPara);
-        } catch (Exception e) {
-            throw new RuntimeException("OMML 解析失败", e);
-        }
-    }
-
     public List<Object> splitContent(String htmlLike) {
         List<Object> list = new ArrayList<>();
         Pattern p = Pattern.compile(
@@ -547,24 +577,6 @@ public class EsQuestionServiceImpl implements EsQuestionService {
         return list;
     }
 
-    public static BufferedImage convertSvgToPng(String svgUrl) throws Exception {
-        URL url = new URL(svgUrl);
-        InputStream inputStream = url.openStream();
-        TranscoderInput input = new TranscoderInput(inputStream);
-        //  PNG 转化对象
-        PNGTranscoder transcoder = new PNGTranscoder();
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        TranscoderOutput output = new TranscoderOutput(outputStream);
-        // svg转png
-        transcoder.transcode(input, output);
-        // png字节数据
-        byte[] pngBytes = outputStream.toByteArray();
-        BufferedImage image = ImageIO.read(new ByteArrayInputStream(pngBytes));
-        outputStream.close();
-        inputStream.close();
-        return image;
-    }
-
     @Override
     public Result<PageQueryQuestionResult> searchQuestionByCombination(QuestionSearchRequest questionSearchRequest) {
         long startTime = System.currentTimeMillis();
@@ -624,7 +636,7 @@ public class EsQuestionServiceImpl implements EsQuestionService {
             return bool;
         }));
 
-        /* 分页 & 高亮（如需） */
+        /* 分页 */
         builder.withPageable(pageable)
                 .withTrackTotalHits(true);
 
@@ -732,50 +744,14 @@ public class EsQuestionServiceImpl implements EsQuestionService {
         }));
     }
 
-    @Data
-    public static class OmmlWrapper {        // 小包装，便于类型区分
-        private final String omml;
-
-        OmmlWrapper(String omml) {
-            this.omml = omml;
-        }
-    }
-
-    @Data
-    public static class ImageWrapper {        // 小包装，便于类型区分
-        private final BufferedImage img;
-        private final Integer width;
-        private final Integer height;
-
-        public ImageWrapper(BufferedImage img, Integer width, Integer height) {
-            this.img = img;
-            this.width = width;
-            this.height = height;
-        }
-    }
-
-    public static void appendOmmlToParagraph(XWPFParagraph para, String omml) throws Exception {
-        // 1. 解析 OMML 字符串
-        String ommlXml = Latex_Word.latexToWord(omml);
-        if (!ommlXml.contains("xmlns:m=")) {
-            ommlXml = ommlXml.replaceFirst(
-                    "<m:oMath(.*?)>",
-                    "<m:oMath$1 xmlns:m=\"http://schemas.openxmlformats.org/officeDocument/2006/math\">"
-            );
-        }
-        XmlObject xmlObj = XmlObject.Factory.parse(ommlXml);
-        // ↓ 这里 cast 成 CTOMath
-        para.getCTP().addNewOMath().set(xmlObj);
-    }
-
     public void insertTagsIntoResult(Question question,
-                                              boolean isSubQuestion,
-                                              HashMap<String, String> questionMap,
-                                              Map<Long, ComplexityType> complexityTypeMap,
-                                              Map<Long, CoreCompetency> coreCompetencyMap,
-                                              Map<Long, Grade> gradeMap, Map<Long, Source> sourceMap,
-                                              Map<Long, Long> maxKnowledgePointIdMap,
-                                              Map<Long, List<Long>> knowledgePointIdsMap) {
+                                     boolean isSubQuestion,
+                                     HashMap<String, String> questionMap,
+                                     Map<Long, ComplexityType> complexityTypeMap,
+                                     Map<Long, CoreCompetency> coreCompetencyMap,
+                                     Map<Long, Grade> gradeMap, Map<Long, Source> sourceMap,
+                                     Map<Long, Long> maxKnowledgePointIdMap,
+                                     Map<Long, List<Long>> knowledgePointIdsMap) {
         if (!isSubQuestion) {
             questionMap.put("complexity_type", complexityTypeMap.get(question.getComplexityId()).getTypeName());
             questionMap.put("core_competency", coreCompetencyMap.get(question.getCoreCompetencyId()).getCompetencyName());
@@ -857,6 +833,28 @@ public class EsQuestionServiceImpl implements EsQuestionService {
             images.forEach(image -> {
                 text.insert(Math.toIntExact(image.getPosition()), image.getUrl());
             });
+        }
+    }
+
+    @Data
+    public static class OmmlWrapper {        // 小包装，便于类型区分
+        private final String omml;
+
+        OmmlWrapper(String omml) {
+            this.omml = omml;
+        }
+    }
+
+    @Data
+    public static class ImageWrapper {        // 小包装，便于类型区分
+        private final BufferedImage img;
+        private final Integer width;
+        private final Integer height;
+
+        public ImageWrapper(BufferedImage img, Integer width, Integer height) {
+            this.img = img;
+            this.width = width;
+            this.height = height;
         }
     }
 }
