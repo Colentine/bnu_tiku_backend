@@ -5,7 +5,6 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 @Component
 public class RedisListService {
@@ -21,7 +20,11 @@ public class RedisListService {
         return stringRedisTemplate.opsForList().range(key, 0, -1);
     }
 
-    public void delete(String key) {
+    public Long deleteOne(String key, String value) {
+        return stringRedisTemplate.opsForList().remove(key, 1, value);
+    }
+
+    public void deleteAll(String key) {
         stringRedisTemplate.delete(key);
     }
 

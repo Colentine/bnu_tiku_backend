@@ -3,6 +3,7 @@ package com.ht.bnu_tiku_backend.controller;
 import com.ht.bnu_tiku_backend.app.QuestionBankApp;
 import com.ht.bnu_tiku_backend.config.ChatClientConfig;
 import com.ht.bnu_tiku_backend.utils.ResponseResult.Result;
+import com.ht.bnu_tiku_backend.utils.redisservice.RedisHashMapService;
 import com.ht.bnu_tiku_backend.utils.redisservice.RedisListService;
 import com.ht.bnu_tiku_backend.utils.redisservice.RedisObjectService;
 import com.ht.bnu_tiku_backend.utils.redisservice.RedisService;
@@ -32,6 +33,8 @@ public class StreamingChatController {
     private RedisService redisService;
     @Resource
     private RedisListService redisListService;
+    @Resource
+    private RedisHashMapService redisHashMapService;
 
     /**
      * LLM流式响应
@@ -65,21 +68,76 @@ public class StreamingChatController {
         return Result.ok(messages);
     }
 
-    @GetMapping("/add/conversation/{chatId}/{userId}")
+    @PostMapping("/add/conversation/{userId}/{chatId}/{chatName}")
     public Result<Boolean> doAddConversation(
             @PathVariable(value = "chatId") String chatId,
-            @PathVariable(value = "userId") String userId
+            @PathVariable(value = "userId") String userId,
+            @PathVariable(value = "chatName") String chatName
     ) {
-        log.info("chatId={}, userId={}", chatId, userId);
-        redisListService.set(userId, chatId);
+        log.info("chatId={}, userId={}, chatName={}", chatId, userId, chatName);
+//        redisListService.set(userId, chatId);
+        try {
+            redisHashMapService.set(userId, chatId, chatName);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         return Result.ok(true);
     }
 
-    @GetMapping("/get/conversation/{userId}")
-    public Result<List<String>> doGetConversations(
+    @GetMapping("/get/conversation/ids/{userId}")
+    public Result<List<String>> doGetConversationIds(
             @PathVariable(value = "userId") String userId
     ) {
         log.info("userId={}", userId);
-        return Result.ok(redisListService.get(userId));
+        List<String> ids = null;
+        try {
+            ids = redisHashMapService.getEntries(userId).keySet().stream().map(o -> (String) o).toList();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return Result.ok(ids);
+    }
+
+    @GetMapping("/get/conversation/names/{userId}")
+    public Result<List<String>> doGetConversationNames(
+            @PathVariable(value = "userId") String userId
+    ) {
+        log.info("userId={}", userId);
+        List<String> names = null;
+        try {
+            names = redisHashMapService.getEntries(userId).values().stream().map(o -> (String) o).toList();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return Result.ok(names);
+    }
+
+    @PostMapping("/delete/conversation/{userId}/{chatId}")
+    public Result<Boolean> doDeleteOneConversation(
+            @PathVariable(value = "userId") String userId,
+            @PathVariable(value = "chatId") String chatId
+    ) {
+        log.info("userId={}, chatId={}", userId, chatId);
+        Long deleteNumber = null;
+        try {
+            deleteNumber = redisHashMapService.deleteOne(userId, chatId);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        log.info("deleteNumber={}", deleteNumber);
+        return Result.ok(true);
+    }
+
+    @PostMapping("/delete/all/conversation/{userId}")
+    public Result<Boolean> doDeleteAllConversation(
+            @PathVariable(value = "userId") String userId
+    ) {
+        log.info("userId={}", userId);
+        try {
+            redisHashMapService.deleteAll(userId);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return Result.ok(true);
     }
 }
