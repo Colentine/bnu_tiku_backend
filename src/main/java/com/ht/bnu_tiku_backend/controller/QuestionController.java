@@ -133,6 +133,12 @@ public class QuestionController {
         return esQuestionService.searchQuestionByCombination(questionSearchRequest);
     }
 
+    @PostMapping("/search/ids")
+    public Result<List<Map<String, String>>> esSearchQuestionByIds(@RequestBody List<Long> ids){
+        log.info("搜索Id：{}", ids);
+        return esQuestionService.searchQuestionByIds(ids);
+    }
+
     /**
      * 批量导出题目
      *

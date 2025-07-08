@@ -13,6 +13,7 @@ import com.ht.bnu_tiku_backend.service.UserService;
 import com.ht.bnu_tiku_backend.utils.DTO.LoginResultDTO;
 import com.ht.bnu_tiku_backend.utils.DTO.UserDTO;
 import com.ht.bnu_tiku_backend.utils.ResponseResult.Result;
+import com.ht.bnu_tiku_backend.utils.ResultCode;
 import com.ht.bnu_tiku_backend.utils.UserHolder;
 import com.ht.bnu_tiku_backend.utils.redisservice.RedisObjectService;
 import com.ht.bnu_tiku_backend.utils.request.UserLoginRequest;
@@ -69,13 +70,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         User user = userMapper.selectOne(queryWrapper);
 
         if (user == null) {
-            throw new RuntimeException("用户名不存在");
+            return Result.fail(ResultCode.USER_NOT_FOUND);
         }
 
         // 3. 密码比对（使用 Hutool 的 MD5）
         String inputPwd = SecureUtil.md5(param.getUserPassword());
         if (!inputPwd.equals(user.getUserPassword())) {
-            throw new RuntimeException("密码错误");
+            return Result.fail(ResultCode.PASSWORD_INCORRECT);
         }
 
         // 4. 生成唯一 token（可替换为 JWT）

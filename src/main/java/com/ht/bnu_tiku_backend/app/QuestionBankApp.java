@@ -53,8 +53,8 @@ public class QuestionBankApp {
     public Flux<String> doStreamChat(String message, String chatId, String modelId) {
 
         ChatClient chat = switch (modelId) {
-            case "MuduoLLM" -> openAiChatClient;
             case "gemma3"   -> ollamaChatClient;
+            case "MuduoLLM" -> openAiChatClient;
             default         -> dashScopeChatClient;
         };
 
@@ -67,9 +67,8 @@ public class QuestionBankApp {
                 .stream()                       // Flux<ChatResponse>
                 .content()                      // Flux<String> (delta tokens)
                 .doOnNext(buf::append)          // ★ 1. 边流边拼
-                .doFinally(sig ->               // ★ 2. 完结 / 取消 / 报错 都会触发
-                        saveAndStop(chatId, buf.toString())
-                );
+                .doOnCancel(() -> saveAndStop(chatId, buf.toString())
+                ).doOnError(e -> saveAndStop(chatId, buf.toString()));
     }
 
     private void saveAndStop(String sid, String fullText) {

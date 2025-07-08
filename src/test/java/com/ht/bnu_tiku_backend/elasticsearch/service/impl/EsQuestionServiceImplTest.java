@@ -5,7 +5,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
-import com.ht.bnu_tiku_backend.elasticsearch.model.Question;
+import com.ht.bnu_tiku_backend.elasticsearch.model.*;
 import com.ht.bnu_tiku_backend.elasticsearch.repository.EsQuestionRepository;
 import com.ht.bnu_tiku_backend.mapper.ComplexityTypeMapper;
 import com.ht.bnu_tiku_backend.mapper.CoreCompetencyMapper;
@@ -15,10 +15,6 @@ import com.ht.bnu_tiku_backend.model.domain.ComplexityType;
 import com.ht.bnu_tiku_backend.model.domain.CoreCompetency;
 import com.ht.bnu_tiku_backend.model.domain.Grade;
 import com.ht.bnu_tiku_backend.model.domain.Source;
-import com.ht.bnu_tiku_backend.mongodb.model.AnswerBlock;
-import com.ht.bnu_tiku_backend.mongodb.model.Explanation;
-import com.ht.bnu_tiku_backend.mongodb.model.ExplanationBlock;
-import com.ht.bnu_tiku_backend.mongodb.model.StemBlock;
 import com.ht.bnu_tiku_backend.service.QuestionService;
 import com.ht.bnu_tiku_backend.utils.request.QuestionSearchRequest;
 import com.latextoword.Latex_Word;
@@ -232,7 +228,7 @@ public class EsQuestionServiceImplTest {
     }
 
     @Test
-    public void insertImageUrlIntoText() {
+    public void DeleteDocument() {
     }
 
     @Test

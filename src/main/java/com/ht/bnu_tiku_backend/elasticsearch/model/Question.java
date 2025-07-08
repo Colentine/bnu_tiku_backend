@@ -1,8 +1,4 @@
 package com.ht.bnu_tiku_backend.elasticsearch.model;
-
-import com.ht.bnu_tiku_backend.mongodb.model.AnswerBlock;
-import com.ht.bnu_tiku_backend.mongodb.model.ExplanationBlock;
-import com.ht.bnu_tiku_backend.mongodb.model.StemBlock;
 import lombok.Data;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;

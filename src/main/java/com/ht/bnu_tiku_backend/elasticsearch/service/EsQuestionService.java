@@ -9,6 +9,7 @@ import com.ht.bnu_tiku_backend.utils.request.QuestionSearchRequest;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 public interface EsQuestionService {
     void saveQuestion(Question question);
@@ -22,6 +23,8 @@ public interface EsQuestionService {
     File generatePdf(List<Long> ids);
 
     Result<PageQueryQuestionResult> searchQuestionByCombination(QuestionSearchRequest questionSearchRequest);
+
+    Result<List<Map<String, String>>> searchQuestionByIds(List<Long> ids);
 
     Result<String> questionCorrect(QuestionCorrectRequest questionCorrectRequest);
 }

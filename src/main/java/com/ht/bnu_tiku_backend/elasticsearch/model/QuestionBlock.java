@@ -1,4 +1,4 @@
-package com.ht.bnu_tiku_backend.mongodb.model;
+package com.ht.bnu_tiku_backend.elasticsearch.model;
 
 import lombok.Data;
 import org.springframework.data.elasticsearch.annotations.Field;

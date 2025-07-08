@@ -32,7 +32,7 @@ public class ChatClientConfig {
 
     @Bean
     @Qualifier("openAiChatClient")
-    public ChatClient openAiChatClient(@Qualifier("openAiChatModel") ChatModel chatModel) {
+    public ChatClient openAiChatClient(@Qualifier("dashscopeChatModel") ChatModel chatModel) {
         return ChatClient.builder(chatModel)
                 .defaultSystem(MUDUO_SYSTEM_PROMPT)
                 .defaultAdvisors(new MessageChatMemoryAdvisor(chatMemory)).build();

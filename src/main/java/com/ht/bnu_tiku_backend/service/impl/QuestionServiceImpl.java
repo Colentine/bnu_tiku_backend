@@ -170,6 +170,7 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question>
         // 2. 遍历所有的习题ID，组装完整习题内容
         for (Long questionId : questionIdList) {
             // 2.1 获取试题习题类型
+//            log.info("questionId:{}", questionId);
             Question question = questionInfoMap.get(questionId);
             Integer questionType = question.getQuestionType();
             // 2.2 判断试题的类型

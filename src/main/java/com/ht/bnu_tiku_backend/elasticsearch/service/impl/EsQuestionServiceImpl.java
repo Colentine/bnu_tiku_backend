@@ -16,7 +16,6 @@ import com.ht.bnu_tiku_backend.elasticsearch.repository.*;
 import com.ht.bnu_tiku_backend.elasticsearch.service.EsQuestionService;
 import com.ht.bnu_tiku_backend.mapper.*;
 import com.ht.bnu_tiku_backend.model.domain.*;
-import com.ht.bnu_tiku_backend.mongodb.model.*;
 import com.ht.bnu_tiku_backend.utils.ResponseResult.Result;
 import com.ht.bnu_tiku_backend.utils.page.PageQueryQuestionResult;
 import com.ht.bnu_tiku_backend.utils.request.CorrectTags;
@@ -568,7 +567,13 @@ public class EsQuestionServiceImpl implements EsQuestionService {
                     hPx = img.getHeight();
                 }
 
-                ImageWrapper imageWrapper = new ImageWrapper(img, wPx, hPx);
+                double total = wPx + hPx;          // 先保存总量
+                double scale = 250.0 / total;      // 目标和为 200 时的缩放系数
+
+                int newW = (int) Math.round(wPx * scale);
+                int newH = (int) Math.round(hPx * scale);
+                log.info("width={}, height={}",(wPx / (wPx + hPx)), (hPx / (hPx + wPx)));
+                ImageWrapper imageWrapper = new ImageWrapper(img, newW, newH);
                 list.add(imageWrapper);
             }
             last = m.end();
@@ -690,6 +695,17 @@ public class EsQuestionServiceImpl implements EsQuestionService {
         long endTime2 = System.currentTimeMillis();
         log.info("组装题目时间花销：{}ms", endTime2 - endTime1);
         return Result.ok(pageQueryQuestionResult);
+    }
+
+    @Override
+    public Result<List<Map<String, String>>> searchQuestionByIds(List<Long> ids) {
+        if(ids.isEmpty()){
+            return Result.ok(List.of());
+        }
+
+        List<Question> questions = esQuestionRepository.findByQuestionIdIn(ids);
+
+        return Result.ok(questionContentAssemble(questions));
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.ht.bnu_tiku_backend.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.ht.bnu_tiku_backend.mapper.QuestionMapper;
 import jakarta.annotation.Resource;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,6 +15,8 @@ import java.util.List;
 public class QuestionServiceImplTest {
     @Resource
     private QuestionServiceImpl questionService;
+    @Resource
+    private QuestionMapper questionMapper;
 
     @Test
     public void queryQuestionsByKnowledgePointIds() throws JsonProcessingException {
@@ -38,6 +41,7 @@ public class QuestionServiceImplTest {
 
     @Test
     public void deleteQuestion() {
+        questionMapper.deleteByIds(List.of(27L, 28L, 29L, 37L, 39L,40L, 41L, 45L, 47L, 49L, 118L, 190L, 219L, 247L, 337L, 354L, 869L, 994L));
     }
 
     @Test
